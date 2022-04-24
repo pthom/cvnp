@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <vector>
 //
-// Explicit casters between cv::Mat / cv::Matx and numpy.ndarray, with shared memory
+// Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with shared memory
 // Also see automatic casters in the namespace pybind11:detail below
 //
 namespace cv_np_shared_cast

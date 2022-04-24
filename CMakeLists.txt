@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.4)
 project(cv_np LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 14)
+
+if (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+    # For conan, add binary dir to module search path
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR})
+
+    find_package(pybind11 REQUIRED)
+endif()
+
 find_package(OpenCV REQUIRED)
 
 #
