@@ -1,0 +1,10 @@
+build/
+venv/
+*.so
+*.pyd
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+*.egg
+*.egg-link
