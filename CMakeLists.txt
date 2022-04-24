@@ -1,36 +1,33 @@
 cmake_minimum_required(VERSION 3.4)
-project(cv_np LANGUAGES CXX)
+project(cvnp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
 if (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     # For conan, add binary dir to module search path
     list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR})
-
     find_package(pybind11 REQUIRED)
 endif()
 
 find_package(OpenCV REQUIRED)
 
 #
-# Library cv_np_lib that you can link to other projects
+# Library cvnp_lib that you can link into another python module
 #
-file(GLOB sources *.h *.cpp)
-pybind11_add_module(cv_np_lib OBJECT ${sources})
-target_link_libraries(cv_np_lib PUBLIC opencv_core)
-target_include_directories(cv_np_lib PUBLIC ${CMAKE_CURRENT_LIST_DIR}/..)
-
+file(GLOB sources cvnp/*.h cvnp/*.cpp)
+pybind11_add_module(cvnp_lib OBJECT ${sources})
+target_link_libraries(cvnp_lib PUBLIC opencv_core)
+target_include_directories(cvnp_lib PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 #
-# Standalone module cv_np that you can import into python
+# Standalone module cvnp that you can import into python
 # (Mainly used for the tests: for the integration with your code,
-# it is easier to link with cv_np_lib object library)
+# it is easier to link with cvnp_lib object library)
 #
-pybind11_add_module(cv_np  main/cv_np_main.cpp)
-target_link_libraries(cv_np PRIVATE cv_np_lib)
-
+pybind11_add_module(cvnp  main/cvnp_main.cpp)
+target_link_libraries(cvnp PRIVATE cvnp_lib)
 # Copy the .so or .pyd module into this dir, to facilitate the tests
 add_custom_command(
-    TARGET cv_np POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:cv_np> ${CMAKE_CURRENT_LIST_DIR}
+    TARGET cvnp POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:cvnp> ${CMAKE_CURRENT_LIST_DIR}
 )

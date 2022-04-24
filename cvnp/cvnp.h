@@ -1,5 +1,5 @@
 #pragma once
-#include "cv_np_synonyms.h"
+#include "cvnp_synonyms.h"
 #include <opencv2/core/core.hpp>
 #include <pybind11/numpy.h>
 
@@ -10,7 +10,7 @@
 // Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with shared memory
 // Also see automatic casters in the namespace pybind11:detail below
 //
-namespace cv_np_shared_cast
+namespace cvnp
 {
     //
     // Public interface
@@ -59,7 +59,7 @@ namespace cv_np_shared_cast
         for (size_t i = 0; i < mat_size; ++i)
             out_matrix.val[i] = arrayValues[i];
     }
-} // namespace cv_np_shared_cast
+} // namespace cvnp
 
 
 
@@ -92,7 +92,7 @@ namespace pybind11
             bool load(handle src, bool)
             {
                 auto a = reinterpret_borrow<array>(src);
-                auto new_mat = cv_np_shared_cast::nparray_to_mat(a);
+                auto new_mat = cvnp::nparray_to_mat(a);
                 value = new_mat;
                 return true;
             }
@@ -105,7 +105,7 @@ namespace pybind11
              */
             static handle cast(const cv::Mat &m, return_value_policy, handle defval)
             {
-                auto a = cv_np_shared_cast::mat_to_nparray(m);
+                auto a = cvnp::mat_to_nparray(m);
                 return a.release();
             }
         };
@@ -129,14 +129,14 @@ namespace pybind11
             bool load(handle src, bool)
             {
                 auto a = reinterpret_borrow<array>(src);
-                cv_np_shared_cast::nparray_to_matx<_Tp, _rows, _cols>(a, value);
+                cvnp::nparray_to_matx<_Tp, _rows, _cols>(a, value);
                 return true;
             }
 
             // Conversion part 2 (C++ -> Python)
             static handle cast(const Matxxx &m, return_value_policy, handle defval)
             {
-                auto a = cv_np_shared_cast::matx_to_nparray<_Tp, _rows, _cols>(m);
+                auto a = cvnp::matx_to_nparray<_Tp, _rows, _cols>(m);
                 return a.release();
             }
         };

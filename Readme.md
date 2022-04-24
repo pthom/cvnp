@@ -1,4 +1,4 @@
-cv_np: pybind11 casts and transformers between numpy and OpenCV.
+cvnp: pybind11 casts and transformers between numpy and OpenCV.
 
 
 ### Automatic casts:
@@ -25,16 +25,16 @@ Since OpenCV supports a subset of numpy types, here is the table of supported ty
 
 ````
 python
->>> import cv_np
->>> print(cv_np.list_types_synonyms())
+>>> import cvnp
+>>> print(cvnp.list_types_synonyms())
   cv_depth  cv_depth_name np_format  
-     0         CV_8U         B      
-     1         CV_8S         b      
-     2         CV_16U        H      
-     3         CV_16S        h      
-     4         CV_32S        i      
-     5         CV_32F        f      
-     6         CV_64F        d      
+     0         CV_8U         B    (np.uint8) 
+     1         CV_8S         b    (np.int8)
+     2         CV_16U        H    (np.uint16)
+     3         CV_16S        h    (np.int16)
+     4         CV_32S        i    (np.int32)
+     5         CV_32F        f    (float)
+     6         CV_64F        d    (np.float64)
 ````
 
 ### Notes
@@ -45,7 +45,7 @@ https://stackoverflow.com/questions/60949451/how-to-send-a-cvmat-to-python-over-
 
 ### Build and test
 
-#### Build
+#### Build / standard mode
 ````bash
 python3 -m venv venv
 source venv/bin/activate
@@ -58,6 +58,12 @@ cmake ..
 make
 ````
 
+#### Build with pip
+
+This code is intended to be integrated into your own pip package. 
+As such, no pip tooling is provided.
+
+
 #### Test
 
 In the main repository dir:
@@ -66,3 +72,12 @@ In the main repository dir:
 pytest tests
 ````
 
+#### Deep clean
+
+````
+rm -rf build
+rm -rf venv
+rm -rf .pytest_cache
+rm  *.so 
+rm *.pyd
+````

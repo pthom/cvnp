@@ -1,6 +1,6 @@
-#include "cv_np/cv_np_synonyms.h"
+#include "cvnp/cvnp_synonyms.h"
 #include <string>
-namespace cv_np
+namespace cvnp
 {
     std::vector<TypeSynonyms> sTypeSynonyms
     {

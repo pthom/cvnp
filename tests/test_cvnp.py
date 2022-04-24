@@ -8,7 +8,7 @@ sys.path.append(".")
 sys.path.append("..")
 
 
-from cv_np import CvNpSharedCast_TestHelper, cv_np_roundtrip
+from cvnp import CvNp_TestHelper, cvnp_roundtrip
 
 
 def are_float_close(x: float, y: float):
@@ -18,7 +18,7 @@ def are_float_close(x: float, y: float):
 """
 We are playing with this C++ class
 
-struct CvNpSharedCast_TestHelper
+struct CvNp_TestHelper
 {
     // Create a mat with 3 rows, 4 columns and 1 channel
     // its shape for numpy should be (3, 4)
@@ -48,7 +48,7 @@ struct CvNpSharedCast_TestHelper
 
 def test_mat():
     # create object
-    o = CvNpSharedCast_TestHelper()
+    o = CvNp_TestHelper()
     assert o.m.shape == (3, 4)
 
     # play with its internal cv::Mat
@@ -96,7 +96,7 @@ def test_mat():
 
 def test_matx():
     # create object
-    o = CvNpSharedCast_TestHelper()
+    o = CvNp_TestHelper()
     assert o.mx.shape == (3, 2)
 
     # play with its internal cv::Mat
@@ -148,7 +148,7 @@ def test_matx():
 
 
 def test_size():
-    o = CvNpSharedCast_TestHelper()
+    o = CvNp_TestHelper()
     assert o.s[0] == 123
     assert o.s[1] == 456
     o.SetWidth(789)
@@ -159,7 +159,7 @@ def test_size():
 
 
 def test_point():
-    o = CvNpSharedCast_TestHelper()
+    o = CvNp_TestHelper()
     assert o.pt[0] == 42
     assert o.pt[1] == 43
     o.SetX(789)
@@ -170,7 +170,7 @@ def test_point():
 
 
 def test_point3():
-    o = CvNpSharedCast_TestHelper()
+    o = CvNp_TestHelper()
     assert are_float_close(o.pt3[0], 41.5)
     assert are_float_close(o.pt3[1], 42.)
     assert are_float_close(o.pt3[2], 42.5)
@@ -182,10 +182,10 @@ def test_point3():
     assert are_float_close(o.pt3[2], 321.0)
 
 
-def test_cv_np_round_trip():
+def test_cvnp_round_trip():
     m = np.zeros([5, 6, 7])
     m[3, 4, 5] = 156;
-    m2 = cv_np_roundtrip(m)
+    m2 = cvnp_roundtrip(m)
     assert (m == m2).all()
 
     possible_types = [np.uint8, np.int8, np.uint16, np.int16, np.int32, float, np.float64]
@@ -211,7 +211,7 @@ def test_cv_np_round_trip():
         else:
             raise RuntimeError("Should not happen")
 
-        m2 = cv_np_roundtrip(m)
+        m2 = cvnp_roundtrip(m)
 
         if not (m == m2).all():
             print("argh")
@@ -221,4 +221,4 @@ def test_cv_np_round_trip():
 if __name__ == "__main__":
     test_mat()
     test_matx()
-    test_cv_np_round_trip()
+    test_cvnp_round_trip()

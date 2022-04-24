@@ -5,7 +5,7 @@
 #include <vector>
 
 
-namespace cv_np
+namespace cvnp
 {
     struct TypeSynonyms
     {

@@ -1,9 +1,9 @@
-#include "cv_np/cv_np_shared_cast.h"
+#include "cvnp/cvnp.h"
 
 // Thanks to Dan Mašek who gave me some inspiration here:
 // https://stackoverflow.com/questions/60949451/how-to-send-a-cvmat-to-python-over-shared-memory
 
-namespace cv_np_shared_cast
+namespace cvnp
 {
 
     namespace detail
@@ -12,7 +12,7 @@ namespace cv_np_shared_cast
         
         py::dtype determine_np_dtype(int cv_depth)
         {
-            for (auto format_synonym : cv_np::sTypeSynonyms)
+            for (auto format_synonym : cvnp::sTypeSynonyms)
                 if (format_synonym.cv_depth == cv_depth)
                     return format_synonym.dtype();
 
@@ -22,7 +22,7 @@ namespace cv_np_shared_cast
 
         int determine_cv_depth(pybind11::dtype dt)
         {
-            for (auto format_synonym : cv_np::sTypeSynonyms)
+            for (auto format_synonym : cvnp::sTypeSynonyms)
                 if (format_synonym.dtype().is(dt))
                     return format_synonym.cv_depth;
 
@@ -93,4 +93,4 @@ namespace cv_np_shared_cast
         return m;
     }
 
-} // namespace cv_np_shared_cast
+} // namespace cvnp
