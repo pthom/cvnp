@@ -19,6 +19,7 @@
     void            nparray_to_matx(pybind11::array &a, cv::Matx<_Tp, _rows, _cols>& out_matrix);
 ````
 
+
 #### Supported matrix types
 
 Since OpenCV supports a subset of numpy types, here is the table of supported types:
@@ -37,10 +38,25 @@ python
      6         CV_64F        d    (np.float64)
 ````
 
-### Notes
 
-Thanks to Dan Mašek who gave me some inspiration here:
-https://stackoverflow.com/questions/60949451/how-to-send-a-cvmat-to-python-over-shared-memory
+### How to use it in your project
+
+1. Add cvnp to your project. For example:
+
+````bash
+cd external
+git submodule add https://github.com/pthom/cvnp.git
+````
+
+2. Link it to your python module:
+
+In your python module CMakeLists, add:
+
+````cmake
+add_subdirectory(path/to/cvnp)
+target_link_libraries(your_target PRIVATE cvnp)
+````
+
 
 
 ### Build and test
@@ -60,13 +76,11 @@ make
 
 #### Build with pip
 
-This code is intended to be integrated into your own pip package. 
-As such, no pip tooling is provided.
-
+This code is intended to be integrated into your own pip package. As such, no pip tooling is provided.
 
 #### Test
 
-In the main repository dir:
+In the main repository dir, run:
 
 ````
 pytest tests
@@ -81,3 +95,10 @@ rm -rf .pytest_cache
 rm  *.so 
 rm *.pyd
 ````
+
+
+### Note
+
+Thanks to Dan Mašek who gave me some inspiration here:
+
+https://stackoverflow.com/questions/60949451/how-to-send-a-cvmat-to-python-over-shared-memory

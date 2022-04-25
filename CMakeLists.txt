@@ -20,7 +20,7 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:cvnp> ${CMAKE_CURRENT_LIST_DIR}
     )
 else()
-    # in order to use cvnp from another project, do this   
+    # in order to use cvnp from another project, do this:   
     #       add_subdirectory(path/to/cvnp)
     #       target_link_libraries(your_target PRIVATE cvnp)
     file(GLOB sources cvnp/*.h cvnp/*.cpp)
