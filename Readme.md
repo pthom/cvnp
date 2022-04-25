@@ -1,13 +1,13 @@
-cvnp: pybind11 casts and transformers between numpy and OpenCV.
+### cvnp: pybind11 casts and transformers between numpy and OpenCV with shared memory
 
 
-### Automatic casts:
+#### Automatic casts:
 
 1. Casts with shared memory between `cv::Mat`, `cv::Matx`, `cv::Vec` and `numpy.ndarray`
 2. Casts without shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::`Point3` and pythonic `tuple`
 
 
-### Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with shared memory
+#### Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with shared memory
 
 ````cpp
     pybind11::array mat_to_nparray(const cv::Mat& m);
@@ -19,7 +19,7 @@ cvnp: pybind11 casts and transformers between numpy and OpenCV.
     void            nparray_to_matx(pybind11::array &a, cv::Matx<_Tp, _rows, _cols>& out_matrix);
 ````
 
-### Supported matrix types
+#### Supported matrix types
 
 Since OpenCV supports a subset of numpy types, here is the table of supported types:
 
