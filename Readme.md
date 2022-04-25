@@ -25,17 +25,17 @@
 Since OpenCV supports a subset of numpy types, here is the table of supported types:
 
 ````
-python
+➜ python
 >>> import cvnp
->>> print(cvnp.list_types_synonyms())
-  cv_depth  cv_depth_name np_format  
-     0         CV_8U         B    (np.uint8) 
-     1         CV_8S         b    (np.int8)
-     2         CV_16U        H    (np.uint16)
-     3         CV_16S        h    (np.int16)
-     4         CV_32S        i    (np.int32)
-     5         CV_32F        f    (float)
-     6         CV_64F        d    (np.float64)
+>>> cvnp.print_types_synonyms()
+  cv_depth  cv_depth_name np_format  np_format_long
+     0         CV_8U         B        np.uint8  
+     1         CV_8S         b        np.int8   
+     2         CV_16U        H       np.uint16  
+     3         CV_16S        h        np.int16  
+     4         CV_32S        i        np.int32  
+     5         CV_32F        f         float    
+     6         CV_64F        d       np.float64
 ````
 
 

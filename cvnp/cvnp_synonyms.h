@@ -12,6 +12,7 @@ namespace cvnp
         int         cv_depth = -1;
         std::string cv_depth_name;
         std::string np_format;
+        std::string np_format_long;
 
         pybind11::dtype dtype() { return pybind11::dtype(np_format); }
         std::string str() const;
@@ -20,4 +21,5 @@ namespace cvnp
     extern std::vector<TypeSynonyms> sTypeSynonyms;
 
     std::string list_types_synonyms();
+    void        print_types_synonyms();
 }

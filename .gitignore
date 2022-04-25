@@ -8,4 +8,4 @@ __pycache__
 *.egg-info
 *.egg
 *.egg-link
-_skbuild/
+.vscode/
