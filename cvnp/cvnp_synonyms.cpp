@@ -44,7 +44,8 @@ namespace cvnp
                 + align_center(np_format) + align_center(np_format_long);
     }
 
-    std::string list_types_synonyms()
+    
+    std::string _print_types_synonyms_str()
     {
         std::string title = 
               align_center("cv_depth") + align_center("cv_depth_name") 
@@ -57,8 +58,13 @@ namespace cvnp
         return r;
     }
 
+    std::vector<TypeSynonyms> list_types_synonyms()
+    {
+        return sTypeSynonyms;
+    }
+
     void print_types_synonyms()
     {
-        std::cout << list_types_synonyms();
+        std::cout << _print_types_synonyms_str();
     }
 }

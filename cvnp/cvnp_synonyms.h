@@ -20,6 +20,6 @@ namespace cvnp
 
     extern std::vector<TypeSynonyms> sTypeSynonyms;
 
-    std::string list_types_synonyms();
-    void        print_types_synonyms();
+    std::vector<TypeSynonyms> list_types_synonyms();
+    void                      print_types_synonyms();
 }

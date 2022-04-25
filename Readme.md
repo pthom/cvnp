@@ -57,6 +57,37 @@ add_subdirectory(path/to/cvnp)
 target_link_libraries(your_target PRIVATE cvnp)
 ````
 
+3. (Optional) If you want to import the declared functions in your module:
+
+Write this in your main module code:
+````cpp
+void pydef_cvnp(pybind11::module& m);
+
+PYBIND11_MODULE(your_module, m)
+{
+    ....
+    ....
+    ....
+    pydef_cvnp(m);
+}
+````
+
+You will get two simple functions:
+* cvnp.list_types_synonyms()
+* cvnp.print_types_synonyms()
+
+````python
+>>> import cvnp
+>>> import pprint
+>>> pprint.pprint(cvnp.list_types_synonyms(), indent=2, width=120)
+[ {'cv_depth': 0, 'cv_depth_name': 'CV_8U', 'np_format': 'B', 'np_format_long': 'np.uint8'},
+  {'cv_depth': 1, 'cv_depth_name': 'CV_8S', 'np_format': 'b', 'np_format_long': 'np.int8'},
+  {'cv_depth': 2, 'cv_depth_name': 'CV_16U', 'np_format': 'H', 'np_format_long': 'np.uint16'},
+  {'cv_depth': 3, 'cv_depth_name': 'CV_16S', 'np_format': 'h', 'np_format_long': 'np.int16'},
+  {'cv_depth': 4, 'cv_depth_name': 'CV_32S', 'np_format': 'i', 'np_format_long': 'np.int32'},
+  {'cv_depth': 5, 'cv_depth_name': 'CV_32F', 'np_format': 'f', 'np_format_long': 'float'},
+  {'cv_depth': 6, 'cv_depth_name': 'CV_64F', 'np_format': 'd', 'np_format_long': 'np.float64'}]
+````
 
 
 ### Build and test
