@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 import math
 import random
+import pytest
 
 import sys
 sys.path.append(".")
@@ -218,7 +219,12 @@ def test_cvnp_round_trip():
         assert (m == m2).all()
 
 
-if __name__ == "__main__":
+def main():
+    # Todo: find a way to call pytest for this file
     test_mat()
     test_matx()
     test_cvnp_round_trip()
+
+
+if __name__ == "__main__":
+    main()

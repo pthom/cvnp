@@ -39,7 +39,7 @@ struct CvNp_TestHelper
 };
 
 
-void pydef_cvnp_shared_test(pybind11::module& m)
+void pydef_cvnp_test(pybind11::module& m)
 {
     pybind11::class_<CvNp_TestHelper>(m, "CvNp_TestHelper")
         .def(pybind11::init<>())

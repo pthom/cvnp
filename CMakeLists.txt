@@ -3,7 +3,7 @@ project(cvnp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
-if (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     # For conan, add binary dir to module search path
     list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR})
     find_package(pybind11 REQUIRED)
@@ -22,10 +22,10 @@ if (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 else()
     # in order to use cvnp from another project, do this   
     #       add_subdirectory(path/to/cvnp)
-    #       target_sources(your_target PRIVATE ${cvnp_SOURCES})
-    #       target_include_directories(your_target PRIVATE ${cvnp_INCLUDE_DIRS})
+    #       target_link_libraries(your_target PRIVATE cvnp)
     file(GLOB sources cvnp/*.h cvnp/*.cpp)
-    set(cvnp_SOURCES ${sources} PARENT_SCOPE)
-    set(cvnp_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR} PARENT_SCOPE)
+    add_library(cvnp INTERFACE)
+    target_sources(cvnp INTERFACE ${sources})
+    target_include_directories(cvnp INTERFACE ${CMAKE_CURRENT_LIST_DIR})
 endif()
 
