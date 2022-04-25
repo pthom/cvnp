@@ -61,7 +61,9 @@ target_link_libraries(your_target PRIVATE cvnp)
 
 ### Build and test
 
-#### Build / standard mode
+_These steps are only for development and testing of this package, they are not required in order to use it in a different project._
+
+#### Build
 
 ````bash
 python3 -m venv venv
@@ -71,18 +73,14 @@ pip install -r requirements.txt
 mkdir build
 cd build
 
-# if you do not have a global install of OpenCV
+# if you do not have a global install of OpenCV and pybind11
 conan install .. --build=missing
-# if you do have a global install of OpenCV
+# if you do have a global install of OpenCV, but not pybind11
 conan install ../conanfile_pybind_only.txt --build=missing
 
 cmake ..
 make
 ````
-
-#### Build with pip
-
-This code is intended to be integrated into your own pip package. As such, no pip tooling is provided.
 
 #### Test
 
@@ -103,8 +101,9 @@ rm *.pyd
 ````
 
 
-### Note
+### Notes
 
 Thanks to Dan Mašek who gave me some inspiration here:
-
 https://stackoverflow.com/questions/60949451/how-to-send-a-cvmat-to-python-over-shared-memory
+
+This code is intended to be integrated into your own pip package. As such, no pip tooling is provided.
