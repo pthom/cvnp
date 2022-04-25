@@ -8,8 +8,6 @@ void pydef_cvnp_test(pybind11::module& m);
 
 PYBIND11_MODULE(cvnp, m)
 {
-    m.doc() = "...blablabla";
-
     pydef_cvnp_test(m);
     pydef_cvnp(m);
 }
