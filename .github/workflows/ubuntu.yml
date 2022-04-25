@@ -1,0 +1,34 @@
+name: Ubuntu
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
+
+    - name: Install OpenCV and SDL via apt
+      run: sudo apt-get install -y libopencv-dev
+
+    - name: run_build_all
+      run:  |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        mkdir build
+        cd build
+        cmake ..
+        make -j
+    
+    - name: tests
+      run:
+        source venv/bin/activate
+        pytest tests
+
+
+
