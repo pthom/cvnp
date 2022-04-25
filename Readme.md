@@ -62,6 +62,7 @@ target_link_libraries(your_target PRIVATE cvnp)
 ### Build and test
 
 #### Build / standard mode
+
 ````bash
 python3 -m venv venv
 source venv/bin/activate
@@ -69,7 +70,12 @@ pip install -r requirements.txt
 
 mkdir build
 cd build
+
+# if you do not have a global install of OpenCV
 conan install .. --build=missing
+# if you do have a global install of OpenCV
+conan install ../conanfile_pybind_only.txt --build=missing
+
 cmake ..
 make
 ````

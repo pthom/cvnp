@@ -28,4 +28,3 @@ else()
     target_sources(cvnp INTERFACE ${sources})
     target_include_directories(cvnp INTERFACE ${CMAKE_CURRENT_LIST_DIR})
 endif()
-
