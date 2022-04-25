@@ -4,7 +4,7 @@
 #### Automatic casts:
 
 1. Casts with shared memory between `cv::Mat`, `cv::Matx`, `cv::Vec` and `numpy.ndarray`
-2. Casts without shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::`Point3` and pythonic `tuple`
+2. Casts without shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::Point3` and python `tuple`
 
 
 #### Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with shared memory
