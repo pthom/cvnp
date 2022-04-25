@@ -20,7 +20,8 @@ namespace cvnp
 
 
     static int sColumnWidth = 12;
-    static std::string AlignCenter(const std::string& s)
+
+    static std::string align_center(const std::string& s)
     {
         int nb_spaces = s.size() < sColumnWidth ? sColumnWidth - s.size() : 0;
         int nb_spaces_left = nb_spaces / 2;
@@ -29,14 +30,14 @@ namespace cvnp
             nb_spaces_right = 0;
         return std::string((size_t)nb_spaces_left, ' ') + s + std::string( (size_t)nb_spaces_right, ' ');
     }
-    static std::string AlignCenter(const int v)
+    static std::string align_center(const int v)
     {
-        return AlignCenter(std::to_string(v));
+        return align_center(std::to_string(v));
     }
 
     std::string list_types_synonyms()
     {
-        std::string title = AlignCenter("cv_depth") + AlignCenter("cv_depth_name") + AlignCenter("np_format");
+        std::string title = align_center("cv_depth") + align_center("cv_depth_name") + align_center("np_format");
 
         std::string r;
         r = title + "\n";
@@ -47,6 +48,6 @@ namespace cvnp
 
     std::string TypeSynonyms::str() const
     {
-        return AlignCenter(cv_depth) + AlignCenter(cv_depth_name) + AlignCenter(np_format);
+        return align_center(cv_depth) + align_center(cv_depth_name) + align_center(np_format);
     }
 }
