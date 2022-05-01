@@ -15,11 +15,11 @@ namespace cvnp
         using Matxxx_shared = cvnp::Matx_shared<Tp, m, n>;
     public:
         Matx_shared()
-        {}
+        {
 
-        Matx_shared &operator=(Matxxx &&other)
+        }
 
-        noexcept
+        Matx_shared &operator=(Matxxx &&other) noexcept
         {
             Matxxx::operator=(std::forward<Matxxx>(other));
             return *this;
@@ -47,39 +47,64 @@ namespace cvnp
     };
 
 
+#define LOG_DBG(s) printf("    %s\n", s);
+
     class Mat_shared : public cv::Mat
     {
     public:
-        Mat_shared()
-        {}
-
-        Mat_shared &operator=(cv::Mat &&other)
-
-        noexcept
+        Mat_shared() : cv::Mat()
         {
+            LOG_DBG("Mat_shared() : cv::Mat()");
+        }
+        Mat_shared(int rows, int cols, int type): cv::Mat(rows, cols, type)
+        {
+            LOG_DBG("Mat_shared(int rows, int cols, int type): cv::Mat(rows, cols, type)");
+        }
+        Mat_shared(int rows, int cols, int type, const cv::Scalar& s) : cv::Mat(rows, cols, type, s)
+        {
+            LOG_DBG("Mat_shared(int rows, int cols, int type, const cv::Scalar& s) : cv::Mat(rows, cols, type, s)");
+        }
+        Mat_shared(cv::Size size, int type): cv::Mat(size, type)
+        {
+            LOG_DBG("Mat_shared(cv::Size size, int type): cv::Mat(size, type)");
+        }
+        Mat_shared(cv::Size size, int type, const cv::Scalar& s) : cv::Mat(size, type, s)
+        {
+            LOG_DBG("Mat_shared(cv::Size size, int type, const cv::Scalar& s) : cv::Mat(size, type, s)");
+        }
+
+        Mat_shared(const cv::Mat& other) noexcept
+        {
+            LOG_DBG("Mat_shared(const cv::Mat& other) noexcept");
+            static_cast<cv::Mat>(*this) = other;
+        }
+
+        Mat_shared(cv::Mat&& other) noexcept
+        {
+            LOG_DBG("Mat_shared(cv::Mat&& other) noexcept");
+            static_cast<cv::Mat>(*this) = std::forward<cv::Mat>(other);
+        }
+
+        Mat_shared(const cv::MatExpr &e) noexcept
+        {
+            LOG_DBG("Mat_shared(const cv::MatExpr &e) noexcept");
+            static_cast<cv::Mat>(*this) = e;
+        }
+
+        Mat_shared& operator=(cv::Mat&& other) noexcept
+        {
+            LOG_DBG("Mat_shared& operator=(cv::Mat&& other) noexcept");
             cv::Mat::operator=(std::forward<cv::Mat>(other));
             return *this;
         }
 
-//        Mat_shared& operator=(cv::MatExpr&& matexpr) noexcept
-//        {
-//            cv::Mat other = std::forward<cv::MatExpr>(matexpr);
-//            cv::Mat::operator=(other);
-//            return *this;
-//        }
-        Mat_shared(cv::Mat &&other)
-
-        noexcept
+        Mat_shared& operator=(const cv::MatExpr& e) noexcept
         {
-            static_cast<cv::Mat>(*this) = std::forward<cv::Mat>(other);
+            LOG_DBG("Mat_shared& operator=(const cv::MatExpr& e) noexcept");
+            e.op->assign(e, *this);
+            return *this;
         }
 
-        Mat_shared(cv::MatExpr &&matexpr)
-
-        noexcept
-        {
-            static_cast<cv::Mat>(*this) = std::forward<cv::MatExpr>(matexpr);
-        }
     };
 
 
