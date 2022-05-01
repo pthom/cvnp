@@ -1,4 +1,4 @@
-## cvnp: pybind11 casts and transformers between numpy and OpenCV with shared memory
+## cvnp: pybind11 casts and transformers between numpy and OpenCV, possibly with shared memory
 
 
 ### Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with or without shared memory
