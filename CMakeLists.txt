@@ -23,13 +23,11 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     #
     # c++ test target
     #
-    add_executable(test_cvnp_cpp tests/test_cvnp_cpp ${sources})
+    add_executable(test_cvnp_cpp tests/test_cvnp_cpp.cpp ${sources})
     target_include_directories(test_cvnp_cpp PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-    get_cmake_property(_variableNames VARIABLES)
     target_link_libraries(test_cvnp_cpp PRIVATE opencv_core)
     find_package(Python3 REQUIRED COMPONENTS Development)
-    target_include_directories(test_cvnp_cpp PRIVATE ${pybind11_INCLUDE_DIR})
-    target_link_libraries(test_cvnp_cpp PRIVATE Python3::Python)
+    target_link_libraries(test_cvnp_cpp PRIVATE pybind11::pybind11)
 
 else()
     # in order to use cvnp from another project, do this:   
