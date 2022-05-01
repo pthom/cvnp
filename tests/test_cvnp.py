@@ -26,7 +26,7 @@ struct CvNp_TestHelper
     cv::Mat m = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
     void SetM(int row, int col, uchar v) { m.at<uchar>(row, col) = v; }
 
-    cv::Matx32d mx = cv::Matx32d::eye();
+    cv::Matx33d mx = cv::Matx33d::eye();
     void SetMX(int row, int col, double v) { mx(row, col) = v;}
 
     cv::Size s = cv::Size(123, 456);

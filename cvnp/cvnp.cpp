@@ -74,14 +74,21 @@ namespace cvnp
 
     } // namespace detail
 
-    pybind11::array mat_to_nparray(const cv::Mat& m)
+    pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory)
     {
         if (!m.isContinuous())
             throw std::invalid_argument("Only continuous Mats supported.");
-        return pybind11::array(detail::determine_np_dtype(m.depth())
-            , detail::determine_shape(m)
-            , m.data
-            , detail::make_capsule_mat(m));
+        if (share_memory)
+            return pybind11::array(detail::determine_np_dtype(m.depth())
+                , detail::determine_shape(m)
+                , m.data
+                , detail::make_capsule_mat(m)
+                );
+        else
+            return pybind11::array(detail::determine_np_dtype(m.depth())
+                , detail::determine_shape(m)
+                , m.data
+                );
     }
 
     cv::Mat nparray_to_mat(pybind11::array& a)

@@ -18,11 +18,13 @@ struct CvNp_TestHelper
 {
     // Create a mat with 3 rows, 4 columns and 1 channel
     // its shape for numpy should be (3, 4)
-    cv::Mat m = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
+    cvnp::Mat_shared m = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
     void SetM(int row, int col, uchar v) { m.at<uchar>(row, col) = v; }
 
-    cv::Matx32d mx = cv::Matx32d::eye();
+    cvnp::Matx_shared32d mx = cv::Matx32d::eye();
     void SetMX(int row, int col, double v) { mx(row, col) = v;}
+
+    cvnp::Vec_shared3d vx = cv::Vec3d(1., 2., 3.);
 
     cv::Size s = cv::Size(123, 456);
     void SetWidth(int w) { s.width = w;}
@@ -37,6 +39,25 @@ struct CvNp_TestHelper
     void SetY3(double y) { pt3.y = y; }
     void SetZ3(double z) { pt3.z = z; }
 };
+
+
+// Returns a short lived Matx: sharing memory for this matrix makes *no sense at all*,
+// since its pointer lives on the stack and is deleted as soon as we exit the function!
+cv::Matx33d ShortLivedMatx()
+{
+    auto mat = cv::Matx33d::eye();
+    return mat;
+}
+
+
+// Returns a short lived Mat: sharing memory for this matrix makes *no sense at all*,
+// since its pointer lives on the stack and is deleted as soon as we exit the function!
+cv::Mat ShortLivedMat()
+{
+    auto mat = cv::Mat(cv::Size(300, 200), CV_8UC4);
+    mat = cv::Scalar(12, 34, 56, 78);
+    return mat;
+}
 
 
 void pydef_cvnp_test(pybind11::module& m)
@@ -65,4 +86,9 @@ void pydef_cvnp_test(pybind11::module& m)
         ;
 
     m.def("cvnp_roundtrip", cvnp_roundtrip);
+
+    m.def("short_lived_matx", ShortLivedMatx);
+    m.def("short_lived_mat", ShortLivedMat);
 }
+
+
