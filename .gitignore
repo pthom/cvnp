@@ -9,3 +9,5 @@ __pycache__
 *.egg
 *.egg-link
 .vscode/
+cmake-build-*/
+.idea/
