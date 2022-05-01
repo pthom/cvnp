@@ -6,10 +6,8 @@
 namespace cvnp
 {
     //
-    // "Distinct Synonyms" for cv::Matx, cv::Mat and cv::Vec when you explicitly intend to share memory
+    // Wrappers for cv::Matx, cv::Mat and cv::Vec when you explicitly intend to share memory
     //
-
-#define LOG_DBG(s) printf("    %s\n", s);
 
     struct Mat_shared
     {

@@ -1,24 +1,25 @@
-### cvnp: pybind11 casts and transformers between numpy and OpenCV with shared memory
+## cvnp: pybind11 casts and transformers between numpy and OpenCV with shared memory
 
 
-#### Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with or without shared memory
+### Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with or without shared memory
 
 Notes:
 - When going from Python to C++ (nparray_to_mat), the memory is *always* shared
-- When going from C++ to Python, you have to specify whether you want to share memory via `bool share_memory`
+- When going from C++ to Python (mat_to_nparray) , you have to _specify_ whether you want to share memory via 
+the boolean parameter `share_memory`
 
 ````cpp
     pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory);
     cv::Mat         nparray_to_mat(pybind11::array& a);
 
-    template<typename _Tp, int _rows, int _cols>
+        template<typename _Tp, int _rows, int _cols>
     pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m, bool share_memory);
-    template<typename _Tp, int _rows, int _cols>
+        template<typename _Tp, int _rows, int _cols>
     void            nparray_to_matx(pybind11::array &a, cv::Matx<_Tp, _rows, _cols>& out_matrix);
 ````
 
 
-__Warning__: be extremely cautious of the lifetime of your Matrixes when using shared memory!
+> __Warning__: be extremely cautious of the lifetime of your Matrixes when using shared memory!
 For example, the code below is guaranted to be a definitive UB, and a may cause crash much later.
 
 ````cpp
@@ -26,8 +27,8 @@ For example, the code below is guaranted to be a definitive UB, and a may cause 
 pybind11::array make_array()
 {
     cv::Mat m(cv::Size(10, 10), CV_8UC1);               // create a matrix on the stack
-    pybind11::array a = cvnp::mat_to_nparray(m, true);  // create a pybind array from it, using the shared memory
-                                                        // (shared memory, which is on the stack!)
+    pybind11::array a = cvnp::mat_to_nparray(m, true);  // create a pybind array from it, using
+                                                        // shared memory, which is on the stack!
     return a;                                                        
 }  // Here be dragons, when closing the scope!
    // m is now out of scope, it is thus freed, 
@@ -35,25 +36,23 @@ pybind11::array make_array()
 ````
 
 
-#### Automatic casts:
+### Automatic casts:
 
-##### Without shared memory
+#### Without shared memory
 
-1. Casts *without* shared memory between `cv::Mat`, `cv::Matx`, `cv::Vec` and `numpy.ndarray`
-2. Casts *without* shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::Point3` and python `tuple`
+* Casts *without* shared memory between `cv::Mat`, `cv::Matx`, `cv::Vec` and `numpy.ndarray`
+* Casts *without* shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::Point3` and python `tuple`
 
-##### With shared memory
+#### With shared memory
 
-3. Casts *with* shared memory between `cvnp::Mat_shared`, `cvnp::Matx_shared`, `cvnp::Vec_shared` and `numpy.ndarray`
+* Casts *with* shared memory between `cvnp::Mat_shared`, `cvnp::Matx_shared`, `cvnp::Vec_shared` and `numpy.ndarray`
 
-When you want to cast with shared memory, use `cvnp::Mat_shared`, `cvnp::Matx_shared`, `cvnp::Vec_shared`, which can 
-easily be constructed from their OpenCV counterparts.
-
+When you want to cast with shared memory, use these wrappers, which can easily be constructed from their OpenCV counterparts.
 They are defined in [cvnp/cvnp_shared_mat.h](cvnp/cvnp_shared_mat.h).
 
 Be sure that your matrixes lifetime if sufficient (_do not ever share the memory of a temporary matrix!_) 
 
-#### Supported matrix types
+### Supported matrix types
 
 Since OpenCV supports a subset of numpy types, here is the table of supported types:
 
@@ -61,18 +60,18 @@ Since OpenCV supports a subset of numpy types, here is the table of supported ty
 ➜ python
 >>> import cvnp
 >>> cvnp.print_types_synonyms()
-  cv_depth  cv_depth_name np_format  np_format_long
-     0         CV_8U         B        np.uint8  
-     1         CV_8S         b        np.int8   
-     2         CV_16U        H       np.uint16  
-     3         CV_16S        h        np.int16  
-     4         CV_32S        i        np.int32  
-     5         CV_32F        f         float    
-     6         CV_64F        d       np.float64
+  cv_depth   cv_depth_name   np_format   np_format_long
+     0          CV_8U           B         np.uint8  
+     1          CV_8S           b         np.int8   
+     2          CV_16U          H        np.uint16  
+     3          CV_16S          h         np.int16  
+     4          CV_32S          i         np.int32  
+     5          CV_32F          f          float    
+     6          CV_64F          d        np.float64
 ````
 
 
-### How to use it in your project
+## How to use it in your project
 
 1. Add cvnp to your project. For example:
 
@@ -123,11 +122,11 @@ You will get two simple functions:
 ````
 
 
-### Build and test
+## Build and test
 
 _These steps are only for development and testing of this package, they are not required in order to use it in a different project._
 
-#### Build
+### Build
 
 ````bash
 python3 -m venv venv
@@ -146,7 +145,7 @@ cmake ..
 make
 ````
 
-#### Test
+### Test
 
 In the build dir, run:
 
@@ -154,7 +153,7 @@ In the build dir, run:
 cmake --build . --target test
 ````
 
-#### Deep clean
+### Deep clean
 
 ````
 rm -rf build
@@ -165,7 +164,7 @@ rm *.pyd
 ````
 
 
-### Notes
+## Notes
 
 Thanks to Dan Mašek who gave me some inspiration here:
 https://stackoverflow.com/questions/60949451/how-to-send-a-cvmat-to-python-over-shared-memory
