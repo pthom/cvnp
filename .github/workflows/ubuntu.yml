@@ -27,9 +27,7 @@ jobs:
         make -j
     
     - name: tests
-      run:
+      run: |
         source venv/bin/activate
-        pytest tests
-
-
-
+        cd build/
+        cmake --build . --target test
