@@ -1,27 +1,57 @@
 ### cvnp: pybind11 casts and transformers between numpy and OpenCV with shared memory
 
 
-#### Automatic casts:
+#### Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with or without shared memory
 
-1. Casts with *possibly* shared memory between `cv::Mat`, `cv::Matx`, `cv::Vec` and `numpy.ndarray`
-2. Casts without shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::Point3` and python `tuple`
-
-
-Warning, sharing memory between C++ 
-
-
-#### Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with shared memory
+Notes:
+- When going from Python to C++ (nparray_to_mat), the memory is *always* shared
+- When going from C++ to Python, you have to specify whether you want to share memory via `bool share_memory`
 
 ````cpp
-    pybind11::array mat_to_nparray(const cv::Mat& m);
+    pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory);
     cv::Mat         nparray_to_mat(pybind11::array& a);
 
-        template<typename _Tp, int _rows, int _cols>
-    pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m);
-        template<typename _Tp, int _rows, int _cols>
+    template<typename _Tp, int _rows, int _cols>
+    pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m, bool share_memory);
+    template<typename _Tp, int _rows, int _cols>
     void            nparray_to_matx(pybind11::array &a, cv::Matx<_Tp, _rows, _cols>& out_matrix);
 ````
 
+
+__Warning__: be extremely cautious of the lifetime of your Matrixes when using shared memory!
+For example, the code below is guaranted to be a definitive UB, and a may cause crash much later.
+
+````cpp
+
+pybind11::array make_array()
+{
+    cv::Mat m(cv::Size(10, 10), CV_8UC1);               // create a matrix on the stack
+    pybind11::array a = cvnp::mat_to_nparray(m, true);  // create a pybind array from it, using the shared memory
+                                                        // (shared memory, which is on the stack!)
+    return a;                                                        
+}  // Here be dragons, when closing the scope!
+   // m is now out of scope, it is thus freed, 
+   // and the returned array directly points to the old address on the stack!
+````
+
+
+#### Automatic casts:
+
+##### Without shared memory
+
+1. Casts *without* shared memory between `cv::Mat`, `cv::Matx`, `cv::Vec` and `numpy.ndarray`
+2. Casts *without* shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::Point3` and python `tuple`
+
+##### With shared memory
+
+3. Casts *with* shared memory between `cvnp::Mat_shared`, `cvnp::Matx_shared`, `cvnp::Vec_shared` and `numpy.ndarray`
+
+When you want to cast with shared memory, use `cvnp::Mat_shared`, `cvnp::Matx_shared`, `cvnp::Vec_shared`, which can 
+easily be constructed from their OpenCV counterparts.
+
+They are defined in [cvnp/cvnp_shared_mat.h](cvnp/cvnp_shared_mat.h).
+
+Be sure that your matrixes lifetime if sufficient (_do not ever share the memory of a temporary matrix!_) 
 
 #### Supported matrix types
 
@@ -118,10 +148,10 @@ make
 
 #### Test
 
-In the main repository dir, run:
+In the build dir, run:
 
 ````
-pytest tests
+cmake --build . --target test
 ````
 
 #### Deep clean

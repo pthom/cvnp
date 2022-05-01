@@ -85,7 +85,9 @@ namespace pybind11
     {
         //
         // Cast between cvnp::Mat_shared and numpy.ndarray
-        // The cast between cv::Mat and numpy.ndarray works *with* shared memory:
+        // The cast between cv::Mat and numpy.ndarray works
+        //   - *with* shared memory when going from C++ to Python
+        //   - *with* shared memory when going from Python to C++
         //   any modification to the Matrix size, type, and values is immediately
         //   impacted on both sides.
         //
@@ -103,8 +105,8 @@ namespace pybind11
             bool load(handle src, bool)
             {
                 auto a = reinterpret_borrow<array>(src);
-                auto new_mat = cvnp::Mat_shared(cvnp::nparray_to_mat(a));
-                value = new_mat;
+                auto new_mat = cv::Mat(cvnp::nparray_to_mat(a));
+                value.Value = new_mat;
                 return true;
             }
 
@@ -114,9 +116,9 @@ namespace pybind11
              * (for ``return_value_policy::reference_internal``) and are generally
              * ignored by implicit casters.
              */
-            static handle cast(const cv::Mat &m, return_value_policy, handle defval)
+            static handle cast(const cvnp::Mat_shared &m, return_value_policy, handle defval)
             {
-                auto a = cvnp::mat_to_nparray(m, true);
+                auto a = cvnp::mat_to_nparray(m.Value, true);
                 return a.release();
             }
         };
@@ -125,6 +127,8 @@ namespace pybind11
         //
         // Cast between cv::Mat and numpy.ndarray
         // The cast between cv::Mat and numpy.ndarray works *without* shared memory.
+        //   - *without* shared memory when going from C++ to Python
+        //   - *with* shared memory when going from Python to C++
         //
         template<>
         struct type_caster<cv::Mat>
@@ -161,30 +165,32 @@ namespace pybind11
 
         //
         // Cast between cvnp::Matx_shared<_rows,_cols> (aka Matx33d, Matx21d, etc) + Vec<_rows> (aka Vec1d, Vec2f, etc) and numpy.ndarray
-        // The cast between cv::Matx, cv::Vec and numpy.ndarray works *with* shared memory:
+        // The cast between cvnp::Matx_shared, cvnp::Vec_shared and numpy.ndarray works *with* shared memory:
         //   any modification to the Matrix size, type, and values is immediately
         //   impacted on both sides.
+        //   - *with* shared memory when going from C++ to Python
+        //   - *with* shared memory when going from Python to C++
         //
         template<typename _Tp, int _rows, int _cols>
         struct type_caster<cvnp::Matx_shared<_Tp, _rows, _cols> >
         {
-            using Matxxx = cvnp::Matx_shared<_Tp, _rows, _cols>;
+            using Matshared_xxx = cvnp::Matx_shared<_Tp, _rows, _cols>;
 
         public:
-        PYBIND11_TYPE_CASTER(Matxxx, _("numpy.ndarray"));
+        PYBIND11_TYPE_CASTER(Matshared_xxx, _("numpy.ndarray"));
 
             // Conversion part 1 (Python->C++)
             bool load(handle src, bool)
             {
                 auto a = reinterpret_borrow<array>(src);
-                cvnp::nparray_to_matx<_Tp, _rows, _cols>(a, value);
+                cvnp::nparray_to_matx<_Tp, _rows, _cols>(a, value.Value);
                 return true;
             }
 
             // Conversion part 2 (C++ -> Python)
-            static handle cast(const Matxxx &m, return_value_policy, handle defval)
+            static handle cast(const Matshared_xxx &m, return_value_policy, handle defval)
             {
-                auto a = cvnp::matx_to_nparray<_Tp, _rows, _cols>(m, true);
+                auto a = cvnp::matx_to_nparray<_Tp, _rows, _cols>(m.Value, true);
                 return a.release();
             }
         };
@@ -193,6 +199,8 @@ namespace pybind11
         //
         // Cast between cv::Matx<_rows,_cols> (aka Matx33d, Matx21d, etc) + Vec<_rows> (aka Vec1d, Vec2f, etc) and numpy.ndarray
         // The cast between cv::Matx, cv::Vec and numpy.ndarray works *without* shared memory.
+        //   - *without* shared memory when going from C++ to Python
+        //   - *with* shared memory when going from Python to C++
         //
         template<typename _Tp, int _rows, int _cols>
         struct type_caster<cv::Matx<_Tp, _rows, _cols> >

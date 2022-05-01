@@ -13,19 +13,39 @@ cv::Mat cvnp_roundtrip(const cv::Mat& m)
     return m;
 }
 
+cvnp::Mat_shared cvnp_roundtrip_shared(const cvnp::Mat_shared& m)
+{
+    return m;
+}
+
+
 
 struct CvNp_TestHelper
 {
-    // Create a mat with 3 rows, 4 columns and 1 channel
+    //
+    // Shared Matrixes
+    //
+    // Create a Mat_shared with 3 rows, 4 columns and 1 channel
     // its shape for numpy should be (3, 4)
-    cvnp::Mat_shared m = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
-    void SetM(int row, int col, uchar v) { m.at<uchar>(row, col) = v; }
+    cvnp::Mat_shared m = cvnp::Mat_shared(cv::Mat::eye(cv::Size(4, 3), CV_8UC1));
+    void SetM(int row, int col, uchar v) { m.Value.at<uchar>(row, col) = v; }
 
     cvnp::Matx_shared32d mx = cv::Matx32d::eye();
-    void SetMX(int row, int col, double v) { mx(row, col) = v;}
+    void SetMX(int row, int col, double v) { mx.Value(row, col) = v;}
 
-    cvnp::Vec_shared3d vx = cv::Vec3d(1., 2., 3.);
+    //
+    // *Not* shared Matrixes
+    //
+    cv::Mat m_ns = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
+    void SetM_ns(int row, int col, uchar v) { m_ns.at<uchar>(row, col) = v; }
 
+    cv::Matx32d mx_ns = cv::Matx32d::eye();
+    void SetMX_ns(int row, int col, double v) { mx_ns(row, col) = v;}
+
+
+    //
+    // *Not* shared simple structs (Size, Point2 and Point3)
+    //
     cv::Size s = cv::Size(123, 456);
     void SetWidth(int w) { s.width = w;}
     void SetHeight(int h) { s.height = h;}
@@ -71,6 +91,12 @@ void pydef_cvnp_test(pybind11::module& m)
         .def_readwrite("mx", &CvNp_TestHelper::mx)
         .def("SetMX", &CvNp_TestHelper::SetMX)
 
+        .def_readwrite("m_ns", &CvNp_TestHelper::m_ns)
+        .def("SetM_ns", &CvNp_TestHelper::SetM_ns)
+
+        .def_readwrite("mx_ns", &CvNp_TestHelper::mx_ns)
+        .def("SetMX_ns", &CvNp_TestHelper::SetMX_ns)
+
         .def_readwrite("s", &CvNp_TestHelper::s)
         .def("SetWidth", &CvNp_TestHelper::SetWidth)
         .def("SetHeight", &CvNp_TestHelper::SetHeight)
@@ -86,6 +112,7 @@ void pydef_cvnp_test(pybind11::module& m)
         ;
 
     m.def("cvnp_roundtrip", cvnp_roundtrip);
+    m.def("cvnp_roundtrip_shared", cvnp_roundtrip_shared);
 
     m.def("short_lived_matx", ShortLivedMatx);
     m.def("short_lived_mat", ShortLivedMat);

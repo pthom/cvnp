@@ -2,75 +2,77 @@
 
 #include <pybind11/embed.h>
 #include <iostream>
-#include <filesystem>
+#include <sstream>
 
 namespace py = pybind11;
 
 
-#define TEST_CAT(s) printf("\n%s\n", s);
+// Poor man's unit test macros, that do not require to add an external dependency
+#define TEST_SHOUT_NAME(s) printf("\n%s\n", s);
+#define TEST_ASSERT(v)                                                 \
+{                                                                      \
+    if ( ! (v) )                                                       \
+    {                                                                  \
+        std::stringstream ss;                                          \
+        ss << "TEST_ASSERT failed at " << __FILE__ << ":" << __LINE__; \
+        throw std::runtime_error(ss.str().c_str());                    \
+    }                                                                  \
+}
 
 
 void test_mat_shared()
 {
     {
-        TEST_CAT("Create an empty Mat_shared, ensure it is ok");
-        cvnp::Mat_shared m(cv::Size(10, 10), CV_8UC3);
-        bool isContinuous = m.isContinuous();
-        assert(isContinuous);
-        assert(m.size() == cv::Size(10, 10));
+        TEST_SHOUT_NAME("Create an empty Mat_shared, ensure it is ok");
+        cvnp::Mat_shared m;
+        TEST_ASSERT(m.Value.size() == cv::Size(0, 0));
     }
 
     {
-        TEST_CAT("Create an empty Mat_shared from an lvalue Mat, ensure it is ok");
+        TEST_SHOUT_NAME("Create an empty Mat_shared from an lvalue Mat, ensure it is ok");
         cv::Mat mcv(cv::Size(10, 10), CV_8UC3);
         cvnp::Mat_shared m(mcv);
-        bool isContinuous = m.isContinuous();
-        assert(m.size() == cv::Size(10, 10));
-        assert(isContinuous);
+        bool isContinuous = m.Value.isContinuous();
+        TEST_ASSERT(m.Value.size() == cv::Size(10, 10));
+        TEST_ASSERT(isContinuous);
     }
 
     {
-        TEST_CAT("Create an empty Mat_shared from an rvalue Mat, ensure it is ok");
+        TEST_SHOUT_NAME("Create an empty Mat_shared from an rvalue Mat, ensure it is ok");
         cvnp::Mat_shared m(cv::Mat(cv::Size(10, 10), CV_8UC3));
-        bool isContinuous = m.isContinuous();
-        assert(isContinuous);
-        assert(m.size() == cv::Size(10, 10));
+        bool isContinuous = m.Value.isContinuous();
+        TEST_ASSERT(isContinuous);
+        TEST_ASSERT(m.Value.size() == cv::Size(10, 10));
     }
 
     {
-        TEST_CAT("Create an empty Mat_shared, copy a Mat inside, ensure it is ok");
-        cv::Mat m(cv::Size(10, 10), CV_8UC3);
-        cvnp::Mat_shared ms;
-        ms = m;
-        bool isContinuous = m.isContinuous();
-        assert(isContinuous);
-        assert(m.size() == cv::Size(10, 10));
-    }
-
-
-    {
-        TEST_CAT("Create an empty Mat_shared, fill it with a cv::MatExpr, ensure it is ok");
+        TEST_SHOUT_NAME("Create an empty Mat_shared, copy a Mat inside, ensure it is ok");
+        cv::Mat mcv(cv::Size(10, 10), CV_8UC3);
         cvnp::Mat_shared m;
-        m = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
-        bool isContinuous= m.isContinuous();
-        assert(m.size() == cv::Size(4, 3));
-        assert(isContinuous);
+        m = mcv;
+        bool isContinuous = m.Value.isContinuous();
+        TEST_ASSERT(isContinuous);
+        TEST_ASSERT(m.Value.size() == cv::Size(10, 10));
+    }
+
+
+    {
+        TEST_SHOUT_NAME("Create an empty Mat_shared, fill it with a cv::MatExpr, ensure it is ok");
+        cvnp::Mat_shared m;
+        m.Value = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
+        bool isContinuous= m.Value.isContinuous();
+        TEST_ASSERT(m.Value.size() == cv::Size(4, 3));
+        TEST_ASSERT(isContinuous);
     }
 
     {
-        TEST_CAT("Create an Mat_shared from a cv::MatExpr, ensure it is ok");
+        TEST_SHOUT_NAME("Create an Mat_shared from a cv::MatExpr, ensure it is ok");
         cvnp::Mat_shared m(cv::Mat::eye(cv::Size(4, 3), CV_8UC1));
-        bool isContinuous= m.isContinuous();
-        assert(m.size() == cv::Size(4, 3));
-        assert(isContinuous);
+        bool isContinuous= m.Value.isContinuous();
+        TEST_ASSERT(m.Value.size() == cv::Size(4, 3));
+        TEST_ASSERT(isContinuous);
     }
 
-
-    /////////////////
-    {
-//        cv::Mat m = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
-//        auto array = cvnp::mat_to_nparray(m, false);
-    }
 }
 
 
