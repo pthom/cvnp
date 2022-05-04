@@ -23,7 +23,7 @@ namespace cvnp
         int determine_cv_depth(pybind11::dtype dt)
         {
             for (auto format_synonym : cvnp::sTypeSynonyms)
-                if (format_synonym.dtype().is(dt))
+                if (format_synonym.np_format[0] == dt.char_())
                     return format_synonym.cv_depth;
 
             std::string msg = std::string("OpenCV does not support this numpy format: ") + dt.char_() +  " (in determine_np_dtype)";
