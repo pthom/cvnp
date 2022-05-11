@@ -132,12 +132,12 @@ Example:
     cv::Mat m(cv::Size(10, 10), CV_8UC1);
     cv::Mat sub_matrix = m(cv::Rect(3, 0, 3, m.cols));
 
-    TEST_NAME("Try to convert a non contiunous Mat to py::array, ensure it throws an exception");
+    TEST_NAME("Try to convert a non continuous Mat to py::array, ensure it throws");
     TEST_ASSERT_THROW(
         cvnp::mat_to_nparray(sub_matrix, share_memory)
     );
 
-    TEST_NAME("Clone the Mat to py::array, ensure it can now be converted to py::array");
+    TEST_NAME("Clone the mat, ensure the clone can now be converted to py::array");
     cv::Mat sub_matrix_clone = sub_matrix.clone();
     py::array a = cvnp::mat_to_nparray(sub_matrix_clone, share_memory);
     TEST_ASSERT(a.shape()[0] == 10);
