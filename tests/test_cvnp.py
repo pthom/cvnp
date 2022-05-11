@@ -68,8 +68,9 @@ struct CvNp_TestHelper
 
 
 def test_mat_shared():
-    # create object
+    # CvNp_TestHelper is a test helper object
     o = CvNp_TestHelper()
+    # o.m is a *shared* matrix i.e `cvnp::Mat_shared` in the object
     assert o.m.shape == (3, 4)
 
     # play with its internal cv::Mat
@@ -116,13 +117,14 @@ def test_mat_shared():
 
 
 def test_mat_not_shared():
-    # create object
+    # CvNp_TestHelper is a test helper object
     o = CvNp_TestHelper()
+    # o.m_ns is a bare `cv::Mat`. Its memory is *not* shared
     assert o.m_ns.shape == (3, 4)
 
     # play with its internal cv::Mat
 
-    # From python, change value in the C++ Mat (o.m) and assert that the changes are applied, and visible from python
+    # From python, change value in the C++ Mat (o.m) and assert that the changes are *not* applied
     o.m_ns[0, 0] = 2
     assert o.m_ns[0, 0] != 2 # No shared memory!
 

@@ -122,10 +122,84 @@ You will get two simple functions:
 ````
 
 
+### Shared and non shared matrices - Demo
+
+Demo based on extracts from the tests:
+
+We are using this struct:
+
+````cpp
+// CvNp_TestHelper is a test helper struct
+struct CvNp_TestHelper
+{
+    // m is a *shared* matrix (i.e `cvnp::Mat_shared`)
+    cvnp::Mat_shared m = cvnp::Mat_shared(cv::Mat::eye(cv::Size(4, 3), CV_8UC1));
+    void SetM(int row, int col, uchar v) { m.Value.at<uchar>(row, col) = v; }
+
+    // m_ns is a standard OpenCV matrix
+    cv::Mat m_ns = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
+    void SetM_ns(int row, int col, uchar v) { m_ns.at<uchar>(row, col) = v; }
+
+    // ...
+};
+````
+
+#### Shared matrices 
+
+Changes propagate from Python to C++ and from C++ to Python
+
+````python
+def test_mat_shared():
+    # CvNp_TestHelper is a test helper object
+    o = CvNp_TestHelper()
+    # o.m is a *shared* matrix i.e `cvnp::Mat_shared` in the object
+    assert o.m.shape == (3, 4)
+
+    # From python, change value in the C++ Mat (o.m) and assert that the changes are visible from python and C++
+    o.m[0, 0] = 2
+    assert o.m[0, 0] == 2
+
+    # Make a python linked copy of the C++ Mat, named m_linked.
+    # Values of m_mlinked and the C++ mat should change together
+    m_linked = o.m
+    m_linked[1, 1] = 3
+    assert o.m[1, 1] == 3
+
+    # Ask C++ to change a value in the matrix, at (0,0)
+    # and verify that m_linked as well as o.m are impacted
+    o.SetM(0, 0, 10)
+    o.SetM(2, 3, 15)
+    assert m_linked[0, 0] == 10
+    assert m_linked[2, 3] == 15
+    assert o.m[0, 0] == 10
+    assert o.m[2, 3] == 15
+````
+
+#### Non shared matrices 
+
+Changes propagate from C++ to Python, but not the other way.
+
+````python
+def test_mat_not_shared():
+    # CvNp_TestHelper is a test helper object
+    o = CvNp_TestHelper()
+    # o.m_ns is a bare `cv::Mat`. Its memory is *not* shared
+    assert o.m_ns.shape == (3, 4)
+
+    # From python, change value in the C++ Mat (o.m) and assert that the changes are *not* applied
+    o.m_ns[0, 0] = 2
+    assert o.m_ns[0, 0] != 2 # No shared memory!
+
+    # Ask C++ to change a value in the matrix, at (0,0) and verify that the change is visible from python
+    o.SetM_ns(2, 3, 15)
+    assert o.m_ns[2, 3] == 15
+````
+
 ### Non continuous matrices
 
 #### From C++
 The conversion of non continuous matrices from C++ to python will fail. You need to clone them to make them continuous beforehand.
+
 Example:
 
 ````cpp
