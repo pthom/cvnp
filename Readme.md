@@ -163,7 +163,7 @@ array([[1, 0, 0, 0],
 >>> sub_matrix.flags['F_CONTIGUOUS']
 False
 
-# Assign it to a cvnp::Mat_share
+# Assign it to a `cvnp::Mat_shared`
 >>> o.m = m
 # Check that memory sharing works
 >>> m[0,0]=42
