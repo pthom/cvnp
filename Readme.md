@@ -122,6 +122,56 @@ You will get two simple functions:
 ````
 
 
+### Non continuous matrices
+
+#### From C++
+The conversion of non continuous matrices from C++ to python will fail. You need to clone them to make them continuous beforehand.
+Example:
+
+````cpp
+    cv::Mat m(cv::Size(10, 10), CV_8UC1);
+    cv::Mat sub_matrix = m(cv::Rect(3, 0, 3, m.cols));
+
+    TEST_NAME("Try to convert a non contiunous Mat to py::array, ensure it throws an exception");
+    TEST_ASSERT_THROW(
+        cvnp::mat_to_nparray(sub_matrix, share_memory)
+    );
+
+    TEST_NAME("Clone the Mat to py::array, ensure it can now be converted to py::array");
+    cv::Mat sub_matrix_clone = sub_matrix.clone();
+    py::array a = cvnp::mat_to_nparray(sub_matrix_clone, share_memory);
+    TEST_ASSERT(a.shape()[0] == 10);
+````
+
+#### From python
+
+The conversion of non continuous matrices from python to python will work, with or without shared memory.
+
+````python
+# import test utilities
+>>> from cvnp import CvNp_TestHelper, cvnp_roundtrip, cvnp_roundtrip_shared, short_lived_matx, short_lived_mat
+>>> o=CvNp_TestHelper()
+# o.m is of type `cvnp::Mat_shared`
+>>> o.m
+array([[1, 0, 0, 0],
+       [0, 1, 0, 0],
+       [0, 0, 1, 0]], dtype=uint8)
+
+# Create a non continuous array
+>>> m = np.zeros((10,10))
+>>> sub_matrix = m[4:6, :]
+>>> sub_matrix.flags['F_CONTIGUOUS']
+False
+
+# Assign it to a cvnp::Mat_share
+>>> o.m = m
+# Check that memory sharing works
+>>> m[0,0]=42
+>>> o.m[0,0]
+42.0
+````
+
+
 ## Build and test
 
 _These steps are only for development and testing of this package, they are not required in order to use it in a different project._
