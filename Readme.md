@@ -89,7 +89,13 @@ add_subdirectory(path/to/cvnp)
 target_link_libraries(your_target PRIVATE cvnp)
 ````
 
-3. (Optional) If you want to import the declared functions in your module:
+3. In your module, include cvnp:
+
+````cpp
+#include "cvnp/cvnp.h"
+````
+
+4. (Optional) If you want to import the declared functions in your module:
 
 Write this in your main module code:
 ````cpp
