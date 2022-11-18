@@ -5,6 +5,7 @@ import random
 import pytest
 
 import sys
+
 sys.path.append(".")
 sys.path.append("..")
 
@@ -13,7 +14,7 @@ from cvnp import CvNp_TestHelper, cvnp_roundtrip, cvnp_roundtrip_shared, short_l
 
 
 def are_float_close(x: float, y: float):
-    return math.fabs(x - y) < 1E-5
+    return math.fabs(x - y) < 1e-5
 
 
 """
@@ -63,8 +64,6 @@ struct CvNp_TestHelper
     void SetZ3(double z) { pt3.z = z; }
 };
 """
-
-
 
 
 def test_mat_shared():
@@ -126,21 +125,21 @@ def test_mat_not_shared():
 
     # From python, change value in the C++ Mat (o.m) and assert that the changes are *not* applied
     o.m_ns[0, 0] = 2
-    assert o.m_ns[0, 0] != 2 # No shared memory!
+    assert o.m_ns[0, 0] != 2  # No shared memory!
 
     # Make a python linked copy of the C++ Mat, named m_linked.
     # Values of m_mlinked and the C++ mat should change together
     m_linked = o.m_ns
     m_linked[1, 1] = 3
-    assert o.m_ns[1, 1] != 3 # No shared memory!
+    assert o.m_ns[1, 1] != 3  # No shared memory!
 
     # Ask C++ to change a value in the matrix, at (0,0)
     # and verify that m_linked as well as o.m are impacted
     o.SetM_ns(0, 0, 10)
     o.SetM_ns(2, 3, 15)
-    assert m_linked[0, 0] != 10 # No shared memory!
+    assert m_linked[0, 0] != 10  # No shared memory!
     assert m_linked[2, 3] != 15
-    assert o.m_ns[0, 0] == 10   # But we can modify by calling C++ methods
+    assert o.m_ns[0, 0] == 10  # But we can modify by calling C++ methods
     assert o.m_ns[2, 3] == 15
 
     # Make a clone of the C++ mat and change a value in it
@@ -227,21 +226,21 @@ def test_matx_not_shared():
 
     # From python, change value in the C++ Mat (o.m) and assert that the changes are applied, and visible from python
     o.mx_ns[0, 0] = 2
-    assert o.mx_ns[0, 0] != 2 # No shared memory!
+    assert o.mx_ns[0, 0] != 2  # No shared memory!
 
     # Make a python linked copy of the C++ Mat, named m_linked.
     # Values of m_mlinked and the C++ mat should change together
     m_linked = o.mx_ns
     m_linked[1, 1] = 3
-    assert o.mx_ns[1, 1] != 3 # No shared memory!
+    assert o.mx_ns[1, 1] != 3  # No shared memory!
 
     # Ask C++ to change a value in the matrix, at (0,0)
     # and verify that m_linked as well as o.m are impacted
     o.SetMX_ns(0, 0, 10)
     o.SetMX_ns(2, 1, 15)
-    assert not are_float_close(m_linked[0, 0], 10) # No shared memory!
+    assert not are_float_close(m_linked[0, 0], 10)  # No shared memory!
     assert not are_float_close(m_linked[2, 1], 15)
-    assert are_float_close(o.mx_ns[0, 0], 10) # But we can modify by calling C++ methods
+    assert are_float_close(o.mx_ns[0, 0], 10)  # But we can modify by calling C++ methods
     assert are_float_close(o.mx_ns[2, 1], 15)
 
     # Make a clone of the C++ mat and change a value in it
@@ -271,7 +270,6 @@ def test_matx_not_shared():
         o.mx_ns = new_mat
 
 
-
 def test_size():
     o = CvNp_TestHelper()
     assert o.s[0] == 123
@@ -297,10 +295,10 @@ def test_point():
 def test_point3():
     o = CvNp_TestHelper()
     assert are_float_close(o.pt3[0], 41.5)
-    assert are_float_close(o.pt3[1], 42.)
+    assert are_float_close(o.pt3[1], 42.0)
     assert are_float_close(o.pt3[2], 42.5)
-    o.SetX3(789.)
-    assert are_float_close(o.pt3[0], 789.)
+    o.SetX3(789.0)
+    assert are_float_close(o.pt3[0], 789.0)
     o.pt3 = (987.1, 654.2, 321.0)
     assert are_float_close(o.pt3[0], 987.1)
     assert are_float_close(o.pt3[1], 654.2)
@@ -309,7 +307,7 @@ def test_point3():
 
 def test_cvnp_round_trip():
     m = np.zeros([5, 6, 7])
-    m[3, 4, 5] = 156;
+    m[3, 4, 5] = 156
     m2 = cvnp_roundtrip(m)
     assert (m == m2).all()
 
@@ -324,7 +322,7 @@ def test_cvnp_round_trip():
                 shape.append(random.randrange(2, 10))
         type = random.choice(possible_types)
 
-        m = np.zeros(shape, dtype = type)
+        m = np.zeros(shape, dtype=type)
 
         i = random.randrange(shape[0])
         j = random.randrange(shape[1])
@@ -345,7 +343,7 @@ def test_cvnp_round_trip():
 
 def test_cvnp_round_trip_shared():
     m = np.zeros([5, 6, 7])
-    m[3, 4, 5] = 156;
+    m[3, 4, 5] = 156
     m2 = cvnp_roundtrip_shared(m)
     assert (m == m2).all()
 
@@ -360,7 +358,7 @@ def test_cvnp_round_trip_shared():
                 shape.append(random.randrange(2, 10))
         type = random.choice(possible_types)
 
-        m = np.zeros(shape, dtype = type)
+        m = np.zeros(shape, dtype=type)
 
         i = random.randrange(shape[0])
         j = random.randrange(shape[1])
@@ -392,7 +390,7 @@ def test_short_lived_matx():
         }
     """
     m = short_lived_matx()
-    assert are_float_close(m[0, 0], 1.)
+    assert are_float_close(m[0, 0], 1.0)
 
 
 def test_short_lived_mat():
