@@ -77,7 +77,7 @@ namespace cvnp
     pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory)
     {
         if (!m.isContinuous())
-            throw std::invalid_argument("Only continuous Mats supported.");
+            throw std::invalid_argument("cvnp::mat_to_nparray / Only contiguous Mats supported / You can clone() your matrix to obtain a contiguous copy.");
         if (share_memory)
             return pybind11::array(detail::determine_np_dtype(m.depth())
                 , detail::determine_shape(m)
@@ -91,8 +91,27 @@ namespace cvnp
                 );
     }
 
+
+    bool is_array_contiguous(const pybind11::array& a)
+    {
+        ssize_t expected_stride = a.itemsize();
+        for (int i = a.ndim() - 1; i >=0; --i)
+        {
+            ssize_t current_stride = a.strides()[i];
+            if (current_stride != expected_stride)
+                return false;
+            expected_stride = expected_stride * a.shape()[i];
+        }
+        return true;
+    }
+
+
     cv::Mat nparray_to_mat(pybind11::array& a)
     {
+        bool is_contiguous = is_array_contiguous(a);
+        if (! is_contiguous)
+            throw std::invalid_argument("cvnp::nparray_to_mat / Only contiguous numpy arrays are supported. / Please use np.ascontiguousarray() to convert your matrix");
+
         int depth = detail::determine_cv_depth(a.dtype());
         int type = detail::determine_cv_type(a, depth);
         cv::Size size = detail::determine_cv_size(a);

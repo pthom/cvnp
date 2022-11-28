@@ -201,10 +201,10 @@ def test_mat_not_shared():
     assert o.m_ns[2, 3] == 15
 ````
 
-### Non continuous matrices
+### Non contiguous matrices are not supported!
 
 #### From C++
-The conversion of non continuous matrices from C++ to python will fail. You need to clone them to make them continuous beforehand.
+The conversion of non-contiguous matrices from C++ to python will fail. You need to clone them to make them continuous beforehand.
 
 Example:
 
@@ -225,31 +225,8 @@ Example:
 
 #### From python
 
-The conversion of non continuous matrices from python to python will work, with or without shared memory.
-
-````python
-# import test utilities
->>> from cvnp import CvNp_TestHelper, cvnp_roundtrip, cvnp_roundtrip_shared, short_lived_matx, short_lived_mat
->>> o=CvNp_TestHelper()
-# o.m is of type `cvnp::Mat_shared`
->>> o.m
-array([[1, 0, 0, 0],
-       [0, 1, 0, 0],
-       [0, 0, 1, 0]], dtype=uint8)
-
-# Create a non continuous array
->>> m = np.zeros((10,10))
->>> sub_matrix = m[4:6, :]
->>> sub_matrix.flags['F_CONTIGUOUS']
-False
-
-# Assign it to a `cvnp::Mat_shared`
->>> o.m = m
-# Check that memory sharing works
->>> m[0,0]=42
->>> o.m[0,0]
-42.0
-````
+The conversion of non-contiguous arrays from python to python is also not supported and will fail.
+Please convert you matrix with `np.ascontiguousarray(m)` beforehand.
 
 
 ## Build and test
