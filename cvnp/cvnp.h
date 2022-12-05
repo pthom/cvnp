@@ -146,9 +146,9 @@ namespace pybind11
              */
             bool load(handle src, bool)
             {
-                if (!isinstance<array>(src)) {
+                if (!isinstance<array>(src))
                     return false;
-                }
+
                 auto a = reinterpret_borrow<array>(src);
                 auto new_mat = cvnp::nparray_to_mat(a);
                 value = new_mat;
@@ -188,9 +188,8 @@ namespace pybind11
             // Conversion part 1 (Python->C++)
             bool load(handle src, bool)
             {
-                if (!isinstance<array>(src)) {
+                if (!isinstance<array>(src))
                     return false;
-                }
 
                 auto a = reinterpret_borrow<array>(src);
                 cvnp::nparray_to_matx<_Tp, _rows, _cols>(a, value.Value);
@@ -223,9 +222,8 @@ namespace pybind11
             // Conversion part 1 (Python->C++)
             bool load(handle src, bool)
             {
-                if (!isinstance<array>(src)) {
+                if (!isinstance<array>(src))
                     return false;
-                }
 
                 auto a = reinterpret_borrow<array>(src);
                 cvnp::nparray_to_matx<_Tp, _rows, _cols>(a, value);
@@ -258,9 +256,8 @@ namespace pybind11
             // Conversion part 1 (Python->C++, i.e tuple -> Size)
             bool load(handle src, bool)
             {
-                if (!isinstance<pybind11::tuple>(src)) {
+                if (!isinstance<pybind11::tuple>(src))
                     return false;
-                }
 
                 auto tuple = pybind11::reinterpret_borrow<pybind11::tuple>(src);
                 if (tuple.size() != 2)
@@ -299,9 +296,8 @@ namespace pybind11
             // Conversion part 1 (Python->C++)
             bool load(handle src, bool)
             {
-                if (!isinstance<pybind11::tuple>(src)) {
+                if (!isinstance<pybind11::tuple>(src))
                     return false;
-                }
 
                 auto tuple = pybind11::reinterpret_borrow<pybind11::tuple>(src);
                 if (tuple.size() != 2)
@@ -340,9 +336,8 @@ namespace pybind11
             // Conversion part 1 (Python->C++)
             bool load(handle src, bool)
             {
-                if (!isinstance<pybind11::tuple>(src)) {
+                if (!isinstance<pybind11::tuple>(src))
                     return false;
-                }
 
                 auto tuple = pybind11::reinterpret_borrow<pybind11::tuple>(src);
                 if (tuple.size() != 3)
