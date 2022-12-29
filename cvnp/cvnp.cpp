@@ -76,7 +76,8 @@ namespace cvnp
 
     pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory)
     {
-        if (!m.isContinuous())
+        // note: empty mats aren't continuous
+        if (!m.isContinuous() && !m.empty())
             throw std::invalid_argument("cvnp::mat_to_nparray / Only contiguous Mats supported / You can clone() your matrix to obtain a contiguous copy.");
         if (share_memory)
             return pybind11::array(detail::determine_np_dtype(m.depth())
@@ -108,14 +109,18 @@ namespace cvnp
 
     cv::Mat nparray_to_mat(pybind11::array& a)
     {
+        // note: empty arrays are not contiguous, but that's fine. Just
+        //       make sure to not access mutable_data
         bool is_contiguous = is_array_contiguous(a);
-        if (! is_contiguous)
+        bool is_not_empty = a.size() != 0;
+        if (! is_contiguous && is_not_empty) {
             throw std::invalid_argument("cvnp::nparray_to_mat / Only contiguous numpy arrays are supported. / Please use np.ascontiguousarray() to convert your matrix");
+        }
 
         int depth = detail::determine_cv_depth(a.dtype());
         int type = detail::determine_cv_type(a, depth);
         cv::Size size = detail::determine_cv_size(a);
-        cv::Mat m(size, type, a.mutable_data(0));
+        cv::Mat m(size, type, is_not_empty ? a.mutable_data(0) : nullptr);
         return m;
     }
 
