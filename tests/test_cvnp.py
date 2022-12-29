@@ -411,11 +411,20 @@ def test_short_lived_mat():
     assert (m[0, 0] == (12, 34, 56, 78)).all()
 
 
+def test_empty_mat():
+    m = np.zeros(shape=(0,0,3))
+    m2 = cvnp_roundtrip(m)
+    assert (m == m2).all()
+    m3 = cvnp_roundtrip_shared(m)
+    assert (m == m3).all()
+
+
 def main():
     # Todo: find a way to call pytest for this file
     test_mat_shared()
     test_matx_shared()
     test_cvnp_round_trip()
+    test_empty_mat()
 
 
 if __name__ == "__main__":
