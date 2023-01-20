@@ -8,7 +8,7 @@ Notes:
 - When going from C++ to Python (mat_to_nparray) , you have to _specify_ whether you want to share memory via 
 the boolean parameter `share_memory`
 
-````cpp
+```cpp
     pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory);
     cv::Mat         nparray_to_mat(pybind11::array& a);
 
@@ -16,13 +16,13 @@ the boolean parameter `share_memory`
     pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m, bool share_memory);
         template<typename _Tp, int _rows, int _cols>
     void            nparray_to_matx(pybind11::array &a, cv::Matx<_Tp, _rows, _cols>& out_matrix);
-````
+```
 
 
 > __Warning__: be extremely cautious of the lifetime of your Matrixes when using shared memory!
 For example, the code below is guaranted to be a definitive UB, and a may cause crash much later.
 
-````cpp
+```cpp
 
 pybind11::array make_array()
 {
@@ -33,7 +33,7 @@ pybind11::array make_array()
 }  // Here be dragons, when closing the scope!
    // m is now out of scope, it is thus freed, 
    // and the returned array directly points to the old address on the stack!
-````
+```
 
 
 ### Automatic casts:
@@ -56,7 +56,7 @@ Be sure that your matrixes lifetime if sufficient (_do not ever share the memory
 
 Since OpenCV supports a subset of numpy types, here is the table of supported types:
 
-````
+```
 ➜ python
 >>> import cvnp
 >>> cvnp.print_types_synonyms()
@@ -68,37 +68,37 @@ Since OpenCV supports a subset of numpy types, here is the table of supported ty
      4          CV_32S          i         np.int32  
      5          CV_32F          f          float    
      6          CV_64F          d        np.float64
-````
+```
 
 
 ## How to use it in your project
 
 1. Add cvnp to your project. For example:
 
-````bash
+```bash
 cd external
 git submodule add https://github.com/pthom/cvnp.git
-````
+```
 
 2. Link it to your python module:
 
 In your python module CMakeLists, add:
 
-````cmake
+```cmake
 add_subdirectory(path/to/cvnp)
 target_link_libraries(your_target PRIVATE cvnp)
-````
+```
 
 3. In your module, include cvnp:
 
-````cpp
+```cpp
 #include "cvnp/cvnp.h"
-````
+```
 
 4. (Optional) If you want to import the declared functions in your module:
 
 Write this in your main module code:
-````cpp
+```cpp
 void pydef_cvnp(pybind11::module& m);
 
 PYBIND11_MODULE(your_module, m)
@@ -108,13 +108,13 @@ PYBIND11_MODULE(your_module, m)
     ....
     pydef_cvnp(m);
 }
-````
+```
 
 You will get two simple functions:
 * cvnp.list_types_synonyms()
 * cvnp.print_types_synonyms()
 
-````python
+```python
 >>> import cvnp
 >>> import pprint
 >>> pprint.pprint(cvnp.list_types_synonyms(), indent=2, width=120)
@@ -125,7 +125,7 @@ You will get two simple functions:
   {'cv_depth': 4, 'cv_depth_name': 'CV_32S', 'np_format': 'i', 'np_format_long': 'np.int32'},
   {'cv_depth': 5, 'cv_depth_name': 'CV_32F', 'np_format': 'f', 'np_format_long': 'float'},
   {'cv_depth': 6, 'cv_depth_name': 'CV_64F', 'np_format': 'd', 'np_format_long': 'np.float64'}]
-````
+```
 
 
 ### Shared and non shared matrices - Demo
@@ -134,7 +134,7 @@ Demo based on extracts from the tests:
 
 We are using this struct:
 
-````cpp
+```cpp
 // CvNp_TestHelper is a test helper struct
 struct CvNp_TestHelper
 {
@@ -148,13 +148,13 @@ struct CvNp_TestHelper
 
     // ...
 };
-````
+```
 
 #### Shared matrices 
 
 Changes propagate from Python to C++ and from C++ to Python
 
-````python
+```python
 def test_mat_shared():
     # CvNp_TestHelper is a test helper object
     o = CvNp_TestHelper()
@@ -179,13 +179,13 @@ def test_mat_shared():
     assert m_linked[2, 3] == 15
     assert o.m[0, 0] == 10
     assert o.m[2, 3] == 15
-````
+```
 
 #### Non shared matrices 
 
 Changes propagate from C++ to Python, but not the other way.
 
-````python
+```python
 def test_mat_not_shared():
     # CvNp_TestHelper is a test helper object
     o = CvNp_TestHelper()
@@ -199,7 +199,7 @@ def test_mat_not_shared():
     # Ask C++ to change a value in the matrix, at (0,0) and verify that the change is visible from python
     o.SetM_ns(2, 3, 15)
     assert o.m_ns[2, 3] == 15
-````
+```
 
 ### Non contiguous matrices are not supported!
 
@@ -208,7 +208,7 @@ The conversion of non-contiguous matrices from C++ to python will fail. You need
 
 Example:
 
-````cpp
+```cpp
     cv::Mat m(cv::Size(10, 10), CV_8UC1);
     cv::Mat sub_matrix = m(cv::Rect(3, 0, 3, m.cols));
 
@@ -221,7 +221,7 @@ Example:
     cv::Mat sub_matrix_clone = sub_matrix.clone();
     py::array a = cvnp::mat_to_nparray(sub_matrix_clone, share_memory);
     TEST_ASSERT(a.shape()[0] == 10);
-````
+```
 
 #### From python
 
@@ -235,7 +235,7 @@ _These steps are only for development and testing of this package, they are not 
 
 ### Build
 
-````bash
+```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -250,25 +250,25 @@ conan install ../conanfile_pybind_only.txt --build=missing
 
 cmake ..
 make
-````
+```
 
 ### Test
 
 In the build dir, run:
 
-````
+```
 cmake --build . --target test
-````
+```
 
 ### Deep clean
 
-````
+```
 rm -rf build
 rm -rf venv
 rm -rf .pytest_cache
 rm  *.so 
 rm *.pyd
-````
+```
 
 
 ## Notes
