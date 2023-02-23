@@ -412,7 +412,7 @@ def test_short_lived_mat():
 
 
 def test_empty_mat():
-    m = np.zeros(shape=(0,0,3))
+    m = np.zeros(shape=(0, 0, 3))
     m2 = cvnp_roundtrip(m)
     assert (m == m2).all()
     m3 = cvnp_roundtrip_shared(m)
