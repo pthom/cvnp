@@ -7,6 +7,14 @@
 namespace py = pybind11;
 
 
+void set_python_path(const std::string& python_program_path)
+{
+    std::wstring python_program_wstring(python_program_path.begin(), python_program_path.end());
+    Py_SetProgramName(python_program_wstring.c_str());
+}
+
+
+
 // Poor man's unit test macros, that do not require to add an external dependency
 #define TEST_NAME(s) printf("\n%s\n", s);
 #define TEST_ASSERT(v)                                                 \
@@ -117,6 +125,7 @@ void test_non_continuous_mat()
 
 int main()
 {
+    //set_python_path("/your/path/to/python");
 
     // We need to instantiate an interpreter before the tests,
     // so that pybind11 is fully initialized
