@@ -7,14 +7,6 @@
 namespace py = pybind11;
 
 
-void set_python_path(const std::string& python_program_path)
-{
-    std::wstring python_program_wstring(python_program_path.begin(), python_program_path.end());
-    Py_SetProgramName(python_program_wstring.c_str());
-}
-
-
-
 // Poor man's unit test macros, that do not require to add an external dependency
 #define TEST_NAME(s) printf("\n%s\n", s);
 #define TEST_ASSERT(v)                                                 \
@@ -125,16 +117,22 @@ void test_non_continuous_mat()
 
 int main()
 {
-    //set_python_path("/your/path/to/python");
+    // If numpy is not installed globally, set site_packages_path
+    std::string site_packages_path;
+    {
+        // In this example, we are using a virtual env
+        std::string venv_path = "../venv";
+        site_packages_path = venv_path + "/lib/python3.11/site-packages";
+    }
 
     // We need to instantiate an interpreter before the tests,
-    // so that pybind11 is fully initialized
+    // and give it the path to the site_packages folder, so that pybind11 can access numpy
+    // (which will be required)
     py::scoped_interpreter guard{};
-    std::string cmd = R"(
-print("hello from python")
-    )";
-    py::exec(cmd);
 
+    // Append the site-packages directory to sys.path
+    py::module sys = py::module::import("sys");
+    sys.attr("path").attr("append")(site_packages_path);
 
     test_mat_shared();
     test_non_continuous_mat();
