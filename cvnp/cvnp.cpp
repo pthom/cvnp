@@ -64,6 +64,20 @@ namespace cvnp
             };
         }
 
+        std::vector<std::size_t> determine_strides(const cv::Mat& m) {
+            if (m.channels() == 1) {
+                return {
+                    static_cast<size_t>(m.step[0]), // row stride (in bytes)
+                    static_cast<size_t>(m.step[1])  // column stride (in bytes)
+                };
+            }
+            return {
+                static_cast<size_t>(m.step[0]), // row stride (in bytes)
+                static_cast<size_t>(m.step[1]), // column stride (in bytes)
+                static_cast<size_t>(m.elemSize1()) // channel stride (in bytes)
+            };
+        }
+ 
         py::capsule make_capsule_mat(const cv::Mat& m)
         {
             return py::capsule(new cv::Mat(m)
