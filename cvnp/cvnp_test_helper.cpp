@@ -23,25 +23,29 @@ cvnp::Mat_shared cvnp_roundtrip_shared(const cvnp::Mat_shared& m)
 struct CvNp_TestHelper
 {
     //
-    // Shared Matrixes
+    // cv::Mat
     //
-    // Create a Mat_shared with 3 rows, 4 columns and 1 channel
-    // its shape for numpy should be (3, 4)
+    // Shared Matrices
+    // Create a Mat_shared with 3 rows, 4 columns and 1 channel. Its shape for numpy should be (3, 4)
     cvnp::Mat_shared m = cvnp::Mat_shared(cv::Mat::eye(cv::Size(4, 3), CV_8UC1));
     void SetM(int row, int col, uchar v) { m.Value.at<uchar>(row, col) = v; }
-
-    cvnp::Matx_shared32d mx = cv::Matx32d::eye();
-    void SetMX(int row, int col, double v) { mx.Value(row, col) = v;}
-
-    //
-    // *Not* shared Matrixes
-    //
+    // *Not* shared Matrices
     cv::Mat m_ns = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
     void SetM_ns(int row, int col, uchar v) { m_ns.at<uchar>(row, col) = v; }
 
+    //
+    // cv::Matx
+    //
+    cvnp::Matx_shared32d mx = cv::Matx32d::eye();
+    void SetMX(int row, int col, double v) { mx.Value(row, col) = v;}
     cv::Matx32d mx_ns = cv::Matx32d::eye();
     void SetMX_ns(int row, int col, double v) { mx_ns(row, col) = v;}
 
+    //
+    // cv::Vec not shared
+    //
+    cv::Vec3f v3_ns = {1.f, 2.f, 3.f};
+    void SetV3_ns(int idx, float v) { v3_ns(idx) = v; }
 
     //
     // *Not* shared simple structs (Size, Point2 and Point3)
@@ -87,15 +91,16 @@ void pydef_cvnp_test(pybind11::module& m)
 
         .def_readwrite("m", &CvNp_TestHelper::m)
         .def("SetM", &CvNp_TestHelper::SetM)
-
-        .def_readwrite("mx", &CvNp_TestHelper::mx)
-        .def("SetMX", &CvNp_TestHelper::SetMX)
-
         .def_readwrite("m_ns", &CvNp_TestHelper::m_ns)
         .def("SetM_ns", &CvNp_TestHelper::SetM_ns)
 
+        .def_readwrite("mx", &CvNp_TestHelper::mx)
+        .def("SetMX", &CvNp_TestHelper::SetMX)
         .def_readwrite("mx_ns", &CvNp_TestHelper::mx_ns)
         .def("SetMX_ns", &CvNp_TestHelper::SetMX_ns)
+
+        .def_readwrite("v3_ns", &CvNp_TestHelper::v3_ns)
+        .def("SetV3_ns", &CvNp_TestHelper::SetV3_ns)
 
         .def_readwrite("s", &CvNp_TestHelper::s)
         .def("SetWidth", &CvNp_TestHelper::SetWidth)

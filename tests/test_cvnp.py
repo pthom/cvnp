@@ -270,6 +270,18 @@ def test_matx_not_shared():
         o.mx_ns = new_mat
 
 
+def test_vec_not_shared():
+    o = CvNp_TestHelper()
+    assert o.v3_ns.shape == (3, 1)
+    assert o.v3_ns[0] == 1.
+
+    o.v3_ns[0] = 10
+    assert o.v3_ns[0] != 10. # Vec are not shared
+
+    o.SetV3_ns(0, 10)
+    assert o.v3_ns[0] == 10.
+
+
 def test_size():
     o = CvNp_TestHelper()
     assert o.s[0] == 123
@@ -421,9 +433,17 @@ def test_empty_mat():
 
 def main():
     # Todo: find a way to call pytest for this file
+    test_vec_not_shared()
     test_mat_shared()
+    test_mat_not_shared()
     test_matx_shared()
+    test_matx_not_shared()
+    test_point()
+    test_point3()
     test_cvnp_round_trip()
+    test_cvnp_round_trip_shared()
+    test_short_lived_mat()
+    test_short_lived_matx()
     test_empty_mat()
 
 

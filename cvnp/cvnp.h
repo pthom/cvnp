@@ -19,6 +19,7 @@ namespace cvnp
     // Public interface
     //
     pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory);
+
     cv::Mat         nparray_to_mat(pybind11::array& a);
 
         template<typename _Tp, int _rows, int _cols>
@@ -238,6 +239,33 @@ namespace pybind11
             }
         };
 
+
+        template<typename _Tp, int _rows>
+        struct type_caster<cv::Vec<_Tp, _rows> >
+        {
+            using Vecxxx = cv::Vec<_Tp, _rows>;
+
+        public:
+        PYBIND11_TYPE_CASTER(Vecxxx, _("numpy.ndarray"));
+
+            // Conversion part 1 (Python->C++)
+            bool load(handle src, bool)
+            {
+                if (!isinstance<array>(src))
+                    return false;
+
+                auto a = reinterpret_borrow<array>(src);
+                cvnp::nparray_to_matx<_Tp, _rows, 1>(a, value);
+                return true;
+            }
+
+            // Conversion part 2 (C++ -> Python)
+            static handle cast(const Vecxxx &m, return_value_policy, handle defval)
+            {
+                auto a = cvnp::matx_to_nparray<_Tp, _rows, 1>(m, false);
+                return a.release();
+            }
+        };
 
 
         //
