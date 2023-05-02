@@ -31,7 +31,6 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     enable_testing()
     add_test(NAME test_cvnp_cpp COMMAND test_cvnp_cpp)
     add_test(NAME test_cvnp_python COMMAND pytest ${CMAKE_SOURCE_DIR}/tests)
-
 else()
     # in order to use cvnp from another project, do this:   
     #       add_subdirectory(path/to/cvnp)

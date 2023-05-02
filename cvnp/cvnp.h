@@ -1,6 +1,5 @@
 #pragma once
 #include "cvnp/cvnp_synonyms.h"
-#include "cvnp/cvnp_shared_mat.h"
 
 #include <opencv2/core/core.hpp>
 #include <pybind11/numpy.h>
@@ -19,11 +18,11 @@ namespace cvnp
     // Public interface
     //
 
-    // For cv::Mat
-    pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory);
+    // For cv::Mat (*with* shared memory)
+    pybind11::array mat_to_nparray(const cv::Mat& m);
     cv::Mat         nparray_to_mat(pybind11::array& a);
 
-    // For cv::Matx
+    // For cv::Matx (*without* shared memory)
     template<typename _Tp, int _rows, int _cols>
     pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m);
     template<typename _Tp, int _rows, int _cols>
@@ -79,55 +78,11 @@ namespace pybind11
     namespace detail
     {
         //
-        // Cast between cvnp::Mat_shared and numpy.ndarray
+        // Cast between cv::Mat and numpy.ndarray
         // The cast between cv::Mat and numpy.ndarray works
         //   - *with* shared memory when going from C++ to Python
         //   - *with* shared memory when going from Python to C++
-        //   any modification to the Matrix size, type, and values is immediately
-        //   impacted on both sides.
-        //
-        template<>
-        struct type_caster<cvnp::Mat_shared>
-        {
-        public:
-        PYBIND11_TYPE_CASTER(cvnp::Mat_shared, _("numpy.ndarray"));
-
-            /**
-             * Conversion part 1 (Python->C++):
-             * Return false upon failure.
-             * The second argument indicates whether implicit conversions should be applied.
-             */
-            bool load(handle src, bool)
-            {
-                if (!isinstance<array>(src)) {
-                    return false;
-                }
-                auto a = reinterpret_borrow<array>(src);
-                auto new_mat = cv::Mat(cvnp::nparray_to_mat(a));
-                value.Value = new_mat;
-                return true;
-            }
-
-            /**
-             * Conversion part 2 (C++ -> Python):
-             * The second and third arguments are used to indicate the return value policy and parent object
-             * (for ``return_value_policy::reference_internal``) and are generally
-             * ignored by implicit casters.
-             */
-            static handle cast(const cvnp::Mat_shared &m, return_value_policy, handle defval)
-            {
-                auto a = cvnp::mat_to_nparray(m.Value, true);
-                return a.release();
-            }
-        };
-
-
-        //
-        // Cast between cv::Mat and numpy.ndarray
-        // The cast between cv::Mat and numpy.ndarray works *without* shared memory.
-        //   - *without* shared memory when going from C++ to Python
-        //   - *with* shared memory when going from Python to C++
-        //
+        //   any modification to the Matrix size, type, and values is immediately impacted on both sides.
         template<>
         struct type_caster<cv::Mat>
         {
@@ -158,7 +113,7 @@ namespace pybind11
              */
             static handle cast(const cv::Mat &m, return_value_policy, handle defval)
             {
-                auto a = cvnp::mat_to_nparray(m, false);
+                auto a = cvnp::mat_to_nparray(m);
                 return a.release();
             }
         };

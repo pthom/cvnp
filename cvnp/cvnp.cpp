@@ -88,22 +88,14 @@ namespace cvnp
 
     } // namespace detail
 
-    pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory)
+    pybind11::array mat_to_nparray(const cv::Mat& m)
     {
-        // note: empty mats aren't continuous
-        if (!m.isContinuous() && !m.empty())
-            throw std::invalid_argument("cvnp::mat_to_nparray / Only contiguous Mats supported / You can clone() your matrix to obtain a contiguous copy.");
-        if (share_memory)
-            return pybind11::array(detail::determine_np_dtype(m.depth())
-                , detail::determine_shape(m)
-                , m.data
-                , detail::make_capsule_mat(m)
-                );
-        else
-            return pybind11::array(detail::determine_np_dtype(m.depth())
-                , detail::determine_shape(m)
-                , m.data
-                );
+        return pybind11::array(detail::determine_np_dtype(m.depth())
+            , detail::determine_shape(m)
+            , detail::determine_strides(m)
+            , m.data
+            , detail::make_capsule_mat(m)
+            );
     }
 
 
@@ -135,6 +127,38 @@ namespace cvnp
         int type = detail::determine_cv_type(a, depth);
         cv::Size size = detail::determine_cv_size(a);
         cv::Mat m(size, type, is_not_empty ? a.mutable_data(0) : nullptr);
+        return m;
+    }
+
+    // this version tries to handles strides and submatrices
+    // this is WIP, currently broken, and not used
+    cv::Mat nparray_to_mat_with_strides_broken(pybind11::array& a)
+    {
+        int depth = detail::determine_cv_depth(a.dtype());
+        int type = detail::determine_cv_type(a, depth);
+        cv::Size size = detail::determine_cv_size(a);
+
+        auto buffer_info = a.request();
+
+        // Get the array strides (convert from pybind11::ssize_t to size_t)
+        std::vector<size_t> strides;
+        for (auto v : buffer_info.strides)
+            strides.push_back(static_cast<size_t>(v));
+
+        // Get the number of dimensions
+        int ndims = static_cast<int>(buffer_info.ndim);
+        //if ((ndims != 2) && (ndims != 3))
+        //    throw std::invalid_argument("nparray_to_mat needs support only 2 or 3 dimension matrices");
+
+        // Convert the shape (sizes) to a vector of int
+        std::vector<int> sizes;
+        for (auto v : buffer_info.shape)
+            sizes.push_back(static_cast<int>(v));
+
+        // Create the cv::Mat with the specified strides (steps)
+        // We are calling this Mat constructor:
+        //     Mat(const std::vector<int>& sizes, int type, void* data, const size_t* steps=0)
+        cv::Mat m(sizes, type, a.mutable_data(0), strides.data());
         return m;
     }
 
