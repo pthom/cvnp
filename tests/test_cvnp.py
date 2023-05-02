@@ -434,10 +434,12 @@ def test_empty_mat():
 def main():
     # Todo: find a way to call pytest for this file
     test_vec_not_shared()
-    test_mat_shared()
-    test_mat_not_shared()
     test_matx_shared()
     test_matx_not_shared()
+
+    test_mat_shared()
+    test_mat_not_shared()
+
     test_point()
     test_point3()
     test_cvnp_round_trip()
