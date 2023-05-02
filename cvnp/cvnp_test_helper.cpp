@@ -34,10 +34,8 @@ struct CvNp_TestHelper
     void SetM_ns(int row, int col, uchar v) { m_ns.at<uchar>(row, col) = v; }
 
     //
-    // cv::Matx
+    // cv::Matx (not shared)
     //
-    cvnp::Matx_shared32d mx = cv::Matx32d::eye();
-    void SetMX(int row, int col, double v) { mx.Value(row, col) = v;}
     cv::Matx32d mx_ns = cv::Matx32d::eye();
     void SetMX_ns(int row, int col, double v) { mx_ns(row, col) = v;}
 
@@ -94,8 +92,6 @@ void pydef_cvnp_test(pybind11::module& m)
         .def_readwrite("m_ns", &CvNp_TestHelper::m_ns)
         .def("SetM_ns", &CvNp_TestHelper::SetM_ns)
 
-        .def_readwrite("mx", &CvNp_TestHelper::mx)
-        .def("SetMX", &CvNp_TestHelper::SetMX)
         .def_readwrite("mx_ns", &CvNp_TestHelper::mx_ns)
         .def("SetMX_ns", &CvNp_TestHelper::SetMX_ns)
 

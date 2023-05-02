@@ -1,6 +1,16 @@
 ## cvnp: pybind11 casts and transformers between numpy and OpenCV, possibly with shared memory
 
 
+### Explicit transformers between cv::Matx and numpy.ndarray *without* shared memory
+
+```cpp
+    template<typename _Tp, int _rows, int _cols>
+    pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m);
+    
+    template<typename _Tp, int _rows, int _cols>
+    void            nparray_to_matx(pybind11::array &a, cv::Matx<_Tp, _rows, _cols>& out_matrix);
+```
+
 ### Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with or without shared memory
 
 Notes:
@@ -11,11 +21,6 @@ the boolean parameter `share_memory`
 ```cpp
     pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory);
     cv::Mat         nparray_to_mat(pybind11::array& a);
-
-        template<typename _Tp, int _rows, int _cols>
-    pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m, bool share_memory);
-        template<typename _Tp, int _rows, int _cols>
-    void            nparray_to_matx(pybind11::array &a, cv::Matx<_Tp, _rows, _cols>& out_matrix);
 ```
 
 
@@ -40,7 +45,8 @@ pybind11::array make_array()
 
 #### Without shared memory
 
-* Casts *without* shared memory between `cv::Mat`, `cv::Matx`, `cv::Vec` and `numpy.ndarray`
+* Casts *without* shared memory between `cv::Mat` and `numpy.ndarray`
+* Casts *without* shared memory for small matrices (cv::Matx) and vector (cv::Vecxxx)  and `numpy.ndarray`
 * Casts *without* shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::Point3` and python `tuple`
 
 #### With shared memory

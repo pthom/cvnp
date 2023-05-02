@@ -18,13 +18,15 @@ namespace cvnp
     //
     // Public interface
     //
-    pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory);
 
+    // For cv::Mat
+    pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory);
     cv::Mat         nparray_to_mat(pybind11::array& a);
 
-        template<typename _Tp, int _rows, int _cols>
-    pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m, bool share_memory);
-        template<typename _Tp, int _rows, int _cols>
+    // For cv::Matx
+    template<typename _Tp, int _rows, int _cols>
+    pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m);
+    template<typename _Tp, int _rows, int _cols>
     void            nparray_to_matx(pybind11::array &a, cv::Matx<_Tp, _rows, _cols>& out_matrix);
 
 
@@ -43,21 +45,13 @@ namespace cvnp
     } // namespace detail
 
     template<typename _Tp, int _rows, int _cols>
-    pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m, bool share_memory)
+    pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m)
     {
-        if (share_memory)
-            return pybind11::array(
-                pybind11::dtype::of<_Tp>()
-                , std::vector<std::size_t> {_rows, _cols}
-                , m.val
-                , detail::make_capsule_matx<_Tp, _rows, _cols>(m)
-                );
-        else
-            return pybind11::array(
-                pybind11::dtype::of<_Tp>()
-                , std::vector<std::size_t> {_rows, _cols}
-                , m.val
-            );
+        return pybind11::array(
+            pybind11::dtype::of<_Tp>()
+            , std::vector<std::size_t> {_rows, _cols}
+            , m.val
+        );
     }
 
     template<typename _Tp, int _rows, int _cols>
@@ -170,48 +164,8 @@ namespace pybind11
         };
 
 
-        //
-        // Cast between cvnp::Matx_shared<_rows,_cols> (aka Matx33d, Matx21d, etc) + Vec<_rows> (aka Vec1d, Vec2f, etc) and numpy.ndarray
-        // The cast between cvnp::Matx_shared, cvnp::Vec_shared and numpy.ndarray works *with* shared memory:
-        //   any modification to the Matrix size, type, and values is immediately
-        //   impacted on both sides.
-        //   - *with* shared memory when going from C++ to Python
-        //   - *with* shared memory when going from Python to C++
-        //
-        template<typename _Tp, int _rows, int _cols>
-        struct type_caster<cvnp::Matx_shared<_Tp, _rows, _cols> >
-        {
-            using Matshared_xxx = cvnp::Matx_shared<_Tp, _rows, _cols>;
-
-        public:
-        PYBIND11_TYPE_CASTER(Matshared_xxx, _("numpy.ndarray"));
-
-            // Conversion part 1 (Python->C++)
-            bool load(handle src, bool)
-            {
-                if (!isinstance<array>(src))
-                    return false;
-
-                auto a = reinterpret_borrow<array>(src);
-                cvnp::nparray_to_matx<_Tp, _rows, _cols>(a, value.Value);
-                return true;
-            }
-
-            // Conversion part 2 (C++ -> Python)
-            static handle cast(const Matshared_xxx &m, return_value_policy, handle defval)
-            {
-                auto a = cvnp::matx_to_nparray<_Tp, _rows, _cols>(m.Value, true);
-                return a.release();
-            }
-        };
-
-
-        //
-        // Cast between cv::Matx<_rows,_cols> (aka Matx33d, Matx21d, etc) + Vec<_rows> (aka Vec1d, Vec2f, etc) and numpy.ndarray
-        // The cast between cv::Matx, cv::Vec and numpy.ndarray works *without* shared memory.
-        //   - *without* shared memory when going from C++ to Python
-        //   - *with* shared memory when going from Python to C++
-        //
+        // Cast between cv::Matx<_rows,_cols> (aka Matx33d, Matx21d, etc) and numpy.ndarray
+        // *without* shared memory.
         template<typename _Tp, int _rows, int _cols>
         struct type_caster<cv::Matx<_Tp, _rows, _cols> >
         {
@@ -234,12 +188,14 @@ namespace pybind11
             // Conversion part 2 (C++ -> Python)
             static handle cast(const Matxxx &m, return_value_policy, handle defval)
             {
-                auto a = cvnp::matx_to_nparray<_Tp, _rows, _cols>(m, false);
+                auto a = cvnp::matx_to_nparray<_Tp, _rows, _cols>(m);
                 return a.release();
             }
         };
 
 
+        // Cast between cv::Vec<_rows> and numpy.ndarray
+        // *without* shared memory.
         template<typename _Tp, int _rows>
         struct type_caster<cv::Vec<_Tp, _rows> >
         {
@@ -262,7 +218,7 @@ namespace pybind11
             // Conversion part 2 (C++ -> Python)
             static handle cast(const Vecxxx &m, return_value_policy, handle defval)
             {
-                auto a = cvnp::matx_to_nparray<_Tp, _rows, 1>(m, false);
+                auto a = cvnp::matx_to_nparray<_Tp, _rows, 1>(m);
                 return a.release();
             }
         };
@@ -346,7 +302,6 @@ namespace pybind11
                 return result.release();
             }
         };
-
 
 
         //
