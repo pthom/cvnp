@@ -1,7 +1,25 @@
-## cvnp: pybind11 casts and transformers between numpy and OpenCV, possibly with shared memory
+## cvnp: pybind11 casts and transformers between numpy and OpenCV, with shared memory
 
+cvnp provides automatic cast between OpenCV matrices and numpy arrays when using pybind11:
 
-### Explicit transformers between cv::Matx and numpy.ndarray *without* shared memory
+* `cv::Mat`: standard OpenCV matrices are transformed to numpy array *with shared memory*
+  (i.e. modification to matrices elements made from python are immediately visible to C++, and vice-versa).
+* Sub-matrices:
+  * Sub-matrices created from C++ can also be shared to python
+  * Sub-matrices created from python will need to be transformed to a contiguous array before being shared to C++
+* `cv::Matx`: small matrices are transformed to numpy arrays *without shared memory*
+* Casts *without* shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::Point3` and python `tuple`
+
+### Explicit transformers
+
+#### Explicit transformers between cv::Mat and numpy.ndarray, *with* shared memory
+
+```cpp
+    pybind11::array mat_to_nparray(const cv::Mat& m);
+    cv::Mat         nparray_to_mat(pybind11::array& a);
+```
+
+#### Explicit transformers between cv::Matx and numpy.ndarray *without* shared memory
 
 ```cpp
     template<typename _Tp, int _rows, int _cols>
@@ -10,53 +28,6 @@
     template<typename _Tp, int _rows, int _cols>
     void            nparray_to_matx(pybind11::array &a, cv::Matx<_Tp, _rows, _cols>& out_matrix);
 ```
-
-### Explicit transformers between cv::Mat / cv::Matx and numpy.ndarray, with or without shared memory
-
-Notes:
-- When going from Python to C++ (nparray_to_mat), the memory is *always* shared
-- When going from C++ to Python (mat_to_nparray) , you have to _specify_ whether you want to share memory via 
-the boolean parameter `share_memory`
-
-```cpp
-    pybind11::array mat_to_nparray(const cv::Mat& m, bool share_memory);
-    cv::Mat         nparray_to_mat(pybind11::array& a);
-```
-
-
-> __Warning__: be extremely cautious of the lifetime of your Matrixes when using shared memory!
-For example, the code below is guaranted to be a definitive UB, and a may cause crash much later.
-
-```cpp
-
-pybind11::array make_array()
-{
-    cv::Mat m(cv::Size(10, 10), CV_8UC1);               // create a matrix on the stack
-    pybind11::array a = cvnp::mat_to_nparray(m, true);  // create a pybind array from it, using
-                                                        // shared memory, which is on the stack!
-    return a;                                                        
-}  // Here be dragons, when closing the scope!
-   // m is now out of scope, it is thus freed, 
-   // and the returned array directly points to the old address on the stack!
-```
-
-
-### Automatic casts:
-
-#### Without shared memory
-
-* Casts *without* shared memory between `cv::Mat` and `numpy.ndarray`
-* Casts *without* shared memory for small matrices (cv::Matx) and vector (cv::Vecxxx)  and `numpy.ndarray`
-* Casts *without* shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::Point3` and python `tuple`
-
-#### With shared memory
-
-* Casts *with* shared memory between `cvnp::Mat_shared`, `cvnp::Matx_shared`, `cvnp::Vec_shared` and `numpy.ndarray`
-
-When you want to cast with shared memory, use these wrappers, which can easily be constructed from their OpenCV counterparts.
-They are defined in [cvnp/cvnp_shared_mat.h](cvnp/cvnp_shared_mat.h).
-
-Be sure that your matrixes lifetime if sufficient (_do not ever share the memory of a temporary matrix!_) 
 
 ### Supported matrix types
 
@@ -134,105 +105,110 @@ You will get two simple functions:
 ```
 
 
-### Shared and non shared matrices - Demo
+### Demo with cv::Mat : shared memory and sub-matrices
 
-Demo based on extracts from the tests:
-
-We are using this struct:
-
-```cpp
-// CvNp_TestHelper is a test helper struct
-struct CvNp_TestHelper
-{
-    // m is a *shared* matrix (i.e `cvnp::Mat_shared`)
-    cvnp::Mat_shared m = cvnp::Mat_shared(cv::Mat::eye(cv::Size(4, 3), CV_8UC1));
-    void SetM(int row, int col, uchar v) { m.Value.at<uchar>(row, col) = v; }
-
-    // m_ns is a standard OpenCV matrix
-    cv::Mat m_ns = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
-    void SetM_ns(int row, int col, uchar v) { m_ns.at<uchar>(row, col) = v; }
-
-    // ...
-};
-```
-
-#### Shared matrices 
-
-Changes propagate from Python to C++ and from C++ to Python
+Below is on extract from the test [test/test_cvnp.py](tests/test_cvnp.py):
 
 ```python
-def test_mat_shared():
-    # CvNp_TestHelper is a test helper object
+def test_cpp_sub_matrices():
+    """
+    We are playing with these bindings:
+        struct CvNp_TestHelper {
+            // m10 is a cv::Mat with 3 float channels
+            cv::Mat m10 = cv::Mat(cv::Size(100, 100), CV_32FC3, cv::Scalar(0.f, 0.f, 0.f));
+            // GetSubM10 returns a sub-matrix of m10
+            cv::Mat GetSubM10() { return m10(cv::Rect(1, 1, 3, 3)); }
+            // Utilities to trigger value changes made by C++ from python 
+            void SetM10(int row, int col, cv::Vec3f v) { m10.at<cv::Vec3f>(row, col) = v; }
+            cv::Vec3f GetM10(int row, int col) { return m10.at<cv::Vec3f>(row, col); }
+            ...
+        };
+    """
     o = CvNp_TestHelper()
-    # o.m is a *shared* matrix i.e `cvnp::Mat_shared` in the object
-    assert o.m.shape == (3, 4)
 
-    # From python, change value in the C++ Mat (o.m) and assert that the changes are visible from python and C++
-    o.m[0, 0] = 2
-    assert o.m[0, 0] == 2
+    #
+    # 1. Transform cv::Mat and sub-matrices into numpy arrays / check that reference counts are handled correctly
+    #
+    # Transform the cv::Mat m10 into a linked numpy array (with shared memory) and assert that m10 now has 2 references
+    m10: np.ndarray = o.m10
+    assert o.m10_refcount() == 2
+    # Also transform the m10's sub-matrix into a numpy array, and assert that m10's references count is increased
+    sub_m10 = o.GetSubM10()
+    assert o.m10_refcount() == 3
 
-    # Make a python linked copy of the C++ Mat, named m_linked.
-    # Values of m_mlinked and the C++ mat should change together
-    m_linked = o.m
-    m_linked[1, 1] = 3
-    assert o.m[1, 1] == 3
+    #
+    # 2. Modify values from C++ or python, and ensure that the data is shared
+    #
+    # Modify a value in m10 from C++, and ensure this is visible from python
+    val00 = np.array([1, 2, 3], np.float32)
+    o.SetM10(0, 0, val00)
+    assert (m10[0, 0] == val00).all()
+    # Modify a value in m10 from python and ensure this is visible from C++
+    val10 = np.array([4, 5, 6], np.float32)
+    o.m10[1, 1] = val10
+    assert (o.m10[1, 1] == val10).all()
 
-    # Ask C++ to change a value in the matrix, at (0,0)
-    # and verify that m_linked as well as o.m are impacted
-    o.SetM(0, 0, 10)
-    o.SetM(2, 3, 15)
-    assert m_linked[0, 0] == 10
-    assert m_linked[2, 3] == 15
-    assert o.m[0, 0] == 10
-    assert o.m[2, 3] == 15
+    #
+    # 3. Check that values in sub-matrices are also changed
+    #
+    # Check that the sub-matrix is changed
+    assert (sub_m10[0, 0] == val10).all()
+    # Change a value in the sub-matrix from python
+    val22 = np.array([7, 8, 9], np.float32)
+    sub_m10[1, 1] = val22
+    # And assert that the change propagated to the master matrix
+    assert (o.m10[2, 2] == val22).all()
+    
+    #
+    # 4. del python numpy arrays and ensure that the reference count is updated
+    #
+    del m10
+    del sub_m10
+    assert o.m10_refcount() == 1
+
+    #
+    # 5. Sub-matrices are supported from C++ to python, but not from python to C++!
+    #
+    # i. create a numpy sub-matrix
+    full_matrix = np.ones([10, 10], np.float32)
+    sub_matrix = full_matrix[1:5, 2:4]
+    # ii. Try to copy it into a C++ matrix: this should raise a `ValueError`
+    with pytest.raises(ValueError):
+      o.m = sub_matrix
+    # iii. However, we can update the C++ matrix by using a contiguous copy of the sub-matrix
+    sub_matrix_clone = np.ascontiguousarray(sub_matrix)
+    o.m = sub_matrix_clone
+    assert o.m.shape == sub_matrix.shape
 ```
 
-#### Non shared matrices 
 
-Changes propagate from C++ to Python, but not the other way.
+#### Demo with cv::Matx : no shared memory
+
+Below is on extract from the test [test/test_cvnp.py](tests/test_cvnp.py):
 
 ```python
-def test_mat_not_shared():
-    # CvNp_TestHelper is a test helper object
+def test_matx_not_shared():
+    """
+    We are playing with these elements
+        struct CvNp_TestHelper {
+            cv::Matx32d mx_ns = cv::Matx32d::eye();
+            void SetMX_ns(int row, int col, double v) { mx_ns(row, col) = v;}
+            ...
+        };
+    """
+    # create object
     o = CvNp_TestHelper()
-    # o.m_ns is a bare `cv::Mat`. Its memory is *not* shared
-    assert o.m_ns.shape == (3, 4)
-
-    # From python, change value in the C++ Mat (o.m) and assert that the changes are *not* applied
-    o.m_ns[0, 0] = 2
-    assert o.m_ns[0, 0] != 2 # No shared memory!
-
-    # Ask C++ to change a value in the matrix, at (0,0) and verify that the change is visible from python
-    o.SetM_ns(2, 3, 15)
-    assert o.m_ns[2, 3] == 15
+  
+    m_linked = o.mx_ns                   # Make a numy array that is a copy of mx_ns *without* shared memory
+    assert m_linked.shape == (3, 2)      # check its shape
+    m_linked[1, 1] = 3                   # a value change in the numpy array made from python
+    assert o.mx_ns[1, 1] != 3            # is not visible from C++!
+  
+    o.SetMX_ns(2, 1, 15)                             # A C++ change a value in the matrix
+    assert not are_float_close(m_linked[2, 1], 15)   # is not visible from python,
+    m_linked = o.mx_ns                               # but becomes visible after we re-create the numpy array from
+    assert are_float_close(m_linked[2, 1], 15)       # the cv::Matx
 ```
-
-### Non contiguous matrices are not supported!
-
-#### From C++
-The conversion of non-contiguous matrices from C++ to python will fail. You need to clone them to make them continuous beforehand.
-
-Example:
-
-```cpp
-    cv::Mat m(cv::Size(10, 10), CV_8UC1);
-    cv::Mat sub_matrix = m(cv::Rect(3, 0, 3, m.cols));
-
-    TEST_NAME("Try to convert a non continuous Mat to py::array, ensure it throws");
-    TEST_ASSERT_THROW(
-        cvnp::mat_to_nparray(sub_matrix, share_memory)
-    );
-
-    TEST_NAME("Clone the mat, ensure the clone can now be converted to py::array");
-    cv::Mat sub_matrix_clone = sub_matrix.clone();
-    py::array a = cvnp::mat_to_nparray(sub_matrix_clone, share_memory);
-    TEST_ASSERT(a.shape()[0] == 10);
-```
-
-#### From python
-
-The conversion of non-contiguous arrays from python to python is also not supported and will fail.
-Please convert you matrix with `np.ascontiguousarray(m)` beforehand.
 
 
 ## Build and test
@@ -283,3 +259,14 @@ Thanks to Dan Mašek who gave me some inspiration here:
 https://stackoverflow.com/questions/60949451/how-to-send-a-cvmat-to-python-over-shared-memory
 
 This code is intended to be integrated into your own pip package. As such, no pip tooling is provided.
+
+## Breaking changes
+
+This library was updated in May 2023, with breaking changes from previous versions:
+
+* Previously, it was required to use the (now defunct) `cvnp::MatShared` in order to share memory between cv::Mat and a numpy array
+  Now the memory is *always* shared between cv::Mat and numpy arrays, since it was shown that this is faster and safe 
+  (since the cv::Mat's reference count is correctly updated)
+* cv::Matx cannot share memory with a numpy array
+
+For those interested in the previous API, it is still available in the [original_api](https://github.com/pthom/cvnp/tree/original_api) branch.

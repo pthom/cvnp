@@ -74,34 +74,24 @@ def test_mat_shared():
 def test_matx_not_shared():
     """
     We are playing with these elements
-        cv::Matx32d mx_ns = cv::Matx32d::eye();
-        void SetMX_ns(int row, int col, double v) { mx_ns(row, col) = v;}
+        struct CvNp_TestHelper {
+            cv::Matx32d mx_ns = cv::Matx32d::eye();
+            void SetMX_ns(int row, int col, double v) { mx_ns(row, col) = v;}
+            ...
+        };
     """
     # create object
     o = CvNp_TestHelper()
-    assert o.mx_ns.shape == (3, 2)
 
-    # play with its internal cv::Mat
+    m_linked = o.mx_ns                   # Make a numy array that is a copy of mx_ns *without* shared memory
+    assert m_linked.shape == (3, 2)      # check its shape
+    m_linked[1, 1] = 3                   # a value change in the numpy array made from python
+    assert o.mx_ns[1, 1] != 3            # is not visible from C++!
 
-    # From python, change value in the C++ Matx and assert that the changes are *not* visible from python
-    # (since Matx values are not shared)
-    o.mx_ns[0, 0] = 2
-    assert o.mx_ns[0, 0] != 2  # No shared memory!
-
-    # Make a python linked copy of the C++ Mat, named m_linked.
-    # Values of m_mlinked and the C++ mat should change together
-    m_linked = o.mx_ns
-    m_linked[1, 1] = 3
-    assert o.mx_ns[1, 1] != 3  # No shared memory!
-
-    # Ask C++ to change a value in the matrix, at (0,0)
-    # and verify that m_linked as well as o.m are impacted
-    o.SetMX_ns(0, 0, 10)
-    o.SetMX_ns(2, 1, 15)
-    assert not are_float_close(m_linked[0, 0], 10)  # No shared memory!
-    assert not are_float_close(m_linked[2, 1], 15)
-    assert are_float_close(o.mx_ns[0, 0], 10)  # But we can modify by calling C++ methods
-    assert are_float_close(o.mx_ns[2, 1], 15)
+    o.SetMX_ns(2, 1, 15)                             # A C++ change a value in the matrix
+    assert not are_float_close(m_linked[2, 1], 15)   # is not visible from python,
+    m_linked = o.mx_ns                               # but becomes visible after we re-create the numpy array from
+    assert are_float_close(m_linked[2, 1], 15)       # the cv::Matx
 
     # Make a clone of the C++ mat and change a value in it
     # => Make sure that the C++ mat is not impacted
@@ -298,55 +288,70 @@ def test_refcount():
     assert o.m10_refcount() == 1
 
 
-def test_cpp_sub_matrices():
+def test_sub_matrices():
     """
     We are playing with these bindings
-        cv::Mat m10 = cv::Mat(cv::Size(100, 100), CV_32FC3, cv::Scalar(0.f, 0.f, 0.f));
-        void SetM10(int row, int col, cv::Vec3f v) { m10.at<cv::Vec3f>(row, col) = v; }
-        cv::Vec3f GetM10(int row, int col) { return m10.at<cv::Vec3f>(row, col); }
-        cv::Mat GetSubM10() {
-            cv::Mat sub = m10(cv::Rect(1, 1, 3, 3));
-            return sub;
-        }
+        struct CvNp_TestHelper {
+            cv::Mat m10 = cv::Mat(cv::Size(100, 100), CV_32FC3, cv::Scalar(0.f, 0.f, 0.f));
+            void SetM10(int row, int col, cv::Vec3f v) { m10.at<cv::Vec3f>(row, col) = v; }
+            cv::Vec3f GetM10(int row, int col) { return m10.at<cv::Vec3f>(row, col); }
+            cv::Mat GetSubM10() { return m10(cv::Rect(1, 1, 3, 3)); }
+
+            ...
+        };
     """
     o = CvNp_TestHelper()
-    # Modify a value in the master matrix from C++ and ensure this is taken into account
+
+    #
+    # 1. Transform cv::Mat and sub-matrices into numpy arrays / check that reference counts are handled correctly
+    #
+    # Transform the cv::Mat m10 into a linked numpy array (with shared memory) and assert that m10 now has 2 references
+    m10: np.ndarray = o.m10
+    assert o.m10_refcount() == 2
+    # Also transform the m10's sub-matrix into a numpy array, and assert that m10's references count is increased
+    sub_m10 = o.GetSubM10()
+    assert o.m10_refcount() == 3
+
+    #
+    # 2. Modify values from C++ or python, and ensure that the data is shared
+    #
+    # Modify a value in m10 from C++, and ensure this is visible from python
     val00 = np.array([1, 2, 3], np.float32)
     o.SetM10(0, 0, val00)
-    assert (o.m10[0, 0] == val00).all()
-
-    # Modify a value in the master matrix from python and ensure this is taken into account
+    assert (m10[0, 0] == val00).all()
+    # Modify a value in m10 from python and ensure this is visible from C++
     val10 = np.array([4, 5, 6], np.float32)
     o.m10[1, 1] = val10
     assert (o.m10[1, 1] == val10).all()
 
+    #
+    # 3. Check that values in sub-matrices are also changed
+    #
     # Check that the sub-matrix is changed
-    sub_matrix = o.GetSubM10()
-    assert (sub_matrix[0, 0] == val10).all()
-
+    assert (sub_m10[0, 0] == val10).all()
     # Change a value in the sub-matrix from python
     val22 = np.array([7, 8, 9], np.float32)
-    sub_matrix[1, 1] = val22
+    sub_m10[1, 1] = val22
     # And assert that the change propagated to the master matrix
     assert (o.m10[2, 2] == val22).all()
 
+    #
+    # 4. del python numpy arrays and ensure that the reference count is updated
+    #
+    del m10
+    del sub_m10
+    assert o.m10_refcount() == 1
 
-def test_python_sub_matrices():
-    o = CvNp_TestHelper()
-
+    #
+    # 5. Sub-matrices are supported from C++ to python, but not from python to C++!
+    #
+    # i. create a numpy sub-matrix
     full_matrix = np.ones([10, 10], np.float32)
     sub_matrix = full_matrix[1:5, 2:4]
-
-    # We should not be able to assign a python sub-matrix to a C++ matrix
-    # (this is only supported in the direction C++ => python)
-    got_exception = False
-    try:
+    # ii. Try to copy it into a C++ matrix: this should raise a `ValueError`
+    with pytest.raises(ValueError):
         o.m = sub_matrix
-    except ValueError:
-        got_exception = True
-    assert got_exception
-
-    # However we can do it if we clone the submatrix, and then assign it to the c++ matrix
+    # iii. However, we can update the C++ matrix by using a contiguous copy of the sub-matrix
     sub_matrix_clone = np.ascontiguousarray(sub_matrix)
     o.m = sub_matrix_clone
     assert o.m.shape == sub_matrix.shape
@@ -356,8 +361,7 @@ def main():
     # Todo: find a way to call pytest for this file
     test_refcount()
     test_mat_shared()
-    test_cpp_sub_matrices()
-    test_python_sub_matrices()
+    test_sub_matrices()
 
     test_vec_not_shared()
     test_matx_not_shared()
