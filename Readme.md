@@ -10,6 +10,8 @@ cvnp provides automatic cast between OpenCV matrices and numpy arrays when using
 * `cv::Matx`: small matrices are transformed to numpy arrays *without shared memory*
 * Casts *without* shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::Point3` and python `tuple`
 
+> Note: The API evolved on May 4th 2023: see [breaking changes](https://github.com/pthom/cvnp#breaking-changes)
+
 ### Explicit transformers
 
 #### Explicit transformers between cv::Mat and numpy.ndarray, *with* shared memory
@@ -261,9 +263,8 @@ This code is intended to be integrated into your own pip package. As such, no pi
 
 This library was updated in May 2023, with breaking changes from previous versions:
 
-* Previously, it was required to use the (now defunct) `cvnp::MatShared` in order to share memory between cv::Mat and a numpy array
-  Now the memory is *always* shared between cv::Mat and numpy arrays, since it was shown that this is faster and safe
-  (since the cv::Mat's reference count is correctly updated)
+* Previously, it was required to use the (now defunct) `cvnp::Mat_shared` in order to share memory between cv::Mat and a numpy array.
+  The memory is now *always* shared between cv::Mat and numpy arrays, since it was shown that this is faster and safe.
 * cv::Matx cannot share memory with a numpy array
 
 For those interested in the previous API, it is still available in the [original_api](https://github.com/pthom/cvnp/tree/original_api) branch.
