@@ -3,6 +3,13 @@ project(cvnp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
+#
+# Use the lines below to force the usage your own version of python
+#
+# set(Python3_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/venv")
+# find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+
+
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     # For conan, add binary dir to module search path
     list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR})
