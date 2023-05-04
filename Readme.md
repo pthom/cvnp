@@ -19,14 +19,14 @@ the boolean parameter `share_memory`
 ```
 
 
-> __Warning__: be extremely cautious of the lifetime of your Matrixes when using shared memory!
+> __Warning__: be extremely cautious of the lifetime of your small matrices (cv::Matx) when using shared memory!
 For example, the code below is guaranted to be a definitive UB, and a may cause crash much later.
 
 ```cpp
 
 pybind11::array make_array()
 {
-    cv::Mat m(cv::Size(10, 10), CV_8UC1);               // create a matrix on the stack
+    cv::Matx22d m(1., 2., 3., 4.);                      // create a cv::Matx on the stack
     pybind11::array a = cvnp::mat_to_nparray(m, true);  // create a pybind array from it, using
                                                         // shared memory, which is on the stack!
     return a;                                                        
