@@ -15,18 +15,15 @@ cvnp provides automatic cast between OpenCV matrices and numpy arrays when using
 #### Explicit transformers between cv::Mat and numpy.ndarray, *with* shared memory
 
 ```cpp
-    pybind11::array mat_to_nparray(const cv::Mat& m);
+pybind11::array mat_to_nparray(const cv::Mat& m);
 cv::Mat         nparray_to_mat(pybind11::array& a);
 ```
 
 #### Explicit transformers between cv::Matx and numpy.ndarray *without* shared memory
 
 ```cpp
-    template<typename _Tp, int _rows, int _cols>
-pybind11::array matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m);
-
-template<typename _Tp, int _rows, int _cols>
-void            nparray_to_matx(pybind11::array &a, cv::Matx<_Tp, _rows, _cols>& out_matrix);
+template<typename _Tp, int _rows, int _cols> pybind11::array    matx_to_nparray(const cv::Matx<_Tp, _rows, _cols>& m);
+template<typename _Tp, int _rows, int _cols> void               nparray_to_matx(pybind11::array &a, cv::Matx<_Tp, _rows, _cols>& out_matrix);
 ```
 
 ### Supported matrix types
