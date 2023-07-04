@@ -119,8 +119,8 @@ namespace pybind11
         };
 
         //
-        // Cast between cv::Mat and numpy.ndarray
-        // The cast between cv::Mat and numpy.ndarray works
+        // Cast between cv::Mat_ and numpy.ndarray
+        // The cast between cv::Mat_ and numpy.ndarray works
         //   - *with* shared memory when going from C++ to Python
         //   - *with* shared memory when going from Python to C++
         //   any modification to the Matrix size, type, and values is immediately impacted on both sides.
