@@ -118,6 +118,49 @@ namespace pybind11
             }
         };
 
+        //
+        // Cast between cv::Mat and numpy.ndarray
+        // The cast between cv::Mat and numpy.ndarray works
+        //   - *with* shared memory when going from C++ to Python
+        //   - *with* shared memory when going from Python to C++
+        //   any modification to the Matrix size, type, and values is immediately impacted on both sides.
+        template<typename _Tp>
+        struct type_caster<cv::Mat_<_Tp>>
+        {
+            using MatTp = cv::Mat_<_Tp>;
+        public:
+        PYBIND11_TYPE_CASTER(MatTp, _("numpy.ndarray"));
+
+            /**
+             * Conversion part 1 (Python->C++):
+             * Return false upon failure.
+             * The second argument indicates whether implicit conversions should be applied.
+             */
+            bool load(handle src, bool)
+            {
+                if (!isinstance<array>(src))
+                    return false;
+
+                auto a = reinterpret_borrow<array>(src);
+                auto new_mat = cvnp::nparray_to_mat(a);
+                value = new_mat;
+                return true;
+            }
+
+            /**
+             * Conversion part 2 (C++ -> Python):
+             * The second and third arguments are used to indicate the return value policy and parent object
+             * (for ``return_value_policy::reference_internal``) and are generally
+             * ignored by implicit casters.
+             */
+            static handle cast(const MatTp &m, return_value_policy, handle defval)
+            {
+                auto a = cvnp::mat_to_nparray(m);
+                return a.release();
+            }
+        };
+
+
 
         // Cast between cv::Matx<_rows,_cols> (aka Matx33d, Matx21d, etc) and numpy.ndarray
         // *without* shared memory.
@@ -297,6 +340,52 @@ namespace pybind11
                 return result.release();
             }
         };
+
+        //
+        // Scalar
+        // No shared memory
+        //
+        template<typename _Tp>
+        struct type_caster<cv::Scalar_<_Tp>>
+        {
+            using ScalarTp = cv::Scalar_<_Tp>;
+
+        public:
+        PYBIND11_TYPE_CASTER(ScalarTp , _("tuple"));
+
+            // Conversion part 1 (Python->C++)
+            bool load(handle src, bool)
+            {
+                if (!isinstance<pybind11::tuple>(src))
+                    return false;
+
+                auto tuple = pybind11::reinterpret_borrow<pybind11::tuple>(src);
+                const auto tupleSize = tuple.size();
+                if (tupleSize > 4)
+                    throw std::invalid_argument("Scalar should be a tuple with at most 4 elements. Got " + std::to_string(tupleSize));
+
+                ScalarTp r;
+                if (tupleSize == 1)
+                    r = ScalarTp(tuple[0].cast<_Tp>());
+                else if (tupleSize == 2)
+                    r = ScalarTp(tuple[0].cast<_Tp>(), tuple[1].cast<_Tp>());
+                else if (tupleSize == 3)
+                    r = ScalarTp(tuple[0].cast<_Tp>(), tuple[1].cast<_Tp>(), tuple[2].cast<_Tp>());
+                else if (tupleSize == 4)
+                    r = ScalarTp(tuple[0].cast<_Tp>(), tuple[1].cast<_Tp>(), tuple[2].cast<_Tp>(), tuple[3].cast<_Tp>());
+
+                value = r;
+                return true;
+            }
+
+            // Conversion part 2 (C++ -> Python)
+            static handle cast(const ScalarTp &value, return_value_policy, handle defval)
+            {
+                auto result = pybind11::make_tuple(value[0], value[1], value[2], value[3]);
+                return result.release();
+            }
+        };
+
 
 
     }  // namespace detail
