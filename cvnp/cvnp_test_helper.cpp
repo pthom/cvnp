@@ -22,6 +22,16 @@ struct CvNp_TestHelper
     cv::Mat m = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
     void SetM(int row, int col, uchar v) { m.at<uchar>(row, col) = v; }
 
+    // cv::Mat_<Tp> (shared)
+    cv::Mat_<uint8_t> m_uint8 = cv::Mat_<uint8_t>::eye(cv::Size(4, 3));
+    cv::Mat_<int8_t> m_int8 = cv::Mat_<int8_t>::eye(cv::Size(4, 3));
+    cv::Mat_<uint16_t> m_uint16 = cv::Mat_<uint16_t>::eye(cv::Size(4, 3));
+    cv::Mat_<int16_t> m_int16 = cv::Mat_<int16_t>::eye(cv::Size(4, 3));
+    cv::Mat_<int32_t> m_int32 = cv::Mat_<int32_t>::eye(cv::Size(4, 3));
+    cv::Mat_<float> m_float = cv::Mat_<float>::eye(cv::Size(4, 3));
+    cv::Mat_<double> m_double = cv::Mat_<double>::eye(cv::Size(4, 3));
+    void set_m_double(int row, int col, double v) { m_double(row, col) = v; }
+
     //
     // cv::Matx (not shared)
     //
@@ -117,6 +127,16 @@ void pydef_cvnp_test(pybind11::module& m)
 
         .def_readwrite("m", &CvNp_TestHelper::m)
         .def("SetM", &CvNp_TestHelper::SetM)
+
+        .def_readwrite("m_uint8", &CvNp_TestHelper::m_uint8)
+        .def_readwrite("m_int8", &CvNp_TestHelper::m_int8)
+        .def_readwrite("m_uint16", &CvNp_TestHelper::m_uint16)
+        .def_readwrite("m_int16", &CvNp_TestHelper::m_int16)
+        .def_readwrite("m_int16", &CvNp_TestHelper::m_int16)
+        .def_readwrite("m_int32", &CvNp_TestHelper::m_int32)
+        .def_readwrite("m_float", &CvNp_TestHelper::m_float)
+        .def_readwrite("m_double", &CvNp_TestHelper::m_double)
+        .def("set_m_double", &CvNp_TestHelper::set_m_double)
 
         .def_readwrite("mx_ns", &CvNp_TestHelper::mx_ns)
         .def("SetMX_ns", &CvNp_TestHelper::SetMX_ns)
