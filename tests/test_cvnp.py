@@ -444,6 +444,30 @@ def test_scalar():
         o.scalar_int32 = (1.23, 4.56)
 
 
+def test_rect():
+    """
+    We are playing with:
+        cv::Rect  rect_int = cv::Rect(1, 2, 3, 4);
+        cv::Rect_<double> rect_double = cv::Rect_<double>(5., 6., 7., 8.);
+    """
+    o = CvNp_TestHelper()
+
+    assert o.rect_int == (1, 2, 3, 4)
+    o.rect_int = (50, 55, 60, 65)
+    assert o.rect_int == (50, 55, 60, 65)
+    with pytest.raises(ValueError):
+        o.rect_int = (1, 2) # We should give 4 values!
+    with pytest.raises(RuntimeError):
+        o.rect_int = (1.1, 2.1, 3.1, 4.1) # We should int values!
+
+    assert o.rect_double == (5.0, 6.0, 7.0, 8.0)
+    o.rect_double = (50.1, 55.2, 60.3, 65.4)
+    assert o.rect_double == (50.1, 55.2, 60.3, 65.4)
+    with pytest.raises(ValueError):
+        o.rect_double = (1, 2) # We should give 4 values!
+
+
+
 def main():
     # Todo: find a way to call pytest for this file
     test_refcount()
@@ -460,6 +484,7 @@ def main():
     test_short_lived_matx()
     test_empty_mat()
     test_scalar()
+    test_rect()
 
 
 if __name__ == "__main__":

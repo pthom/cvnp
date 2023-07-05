@@ -88,6 +88,12 @@ struct CvNp_TestHelper
     cv::Scalar_<float> scalar_float = cv::Scalar_<float>(1.f, 2.f);
     cv::Scalar_<int32_t> scalar_int32 = cv::Scalar_<int32_t>(1, 2, 3);
     cv::Scalar_<uint8_t> scalar_uint8 = cv::Scalar_<uint8_t>(1, 2, 3, 4);
+
+    //
+    // cv::Rect
+    //
+    cv::Rect  rect_int = cv::Rect(1, 2, 3, 4);
+    cv::Rect_<double> rect_double = cv::Rect_<double>(5., 6., 7., 8.);
 };
 
 
@@ -175,6 +181,9 @@ void pydef_cvnp_test(pybind11::module& m)
         .def_readwrite("scalar_float", &CvNp_TestHelper::scalar_float)
         .def_readwrite("scalar_int32", &CvNp_TestHelper::scalar_int32)
         .def_readwrite("scalar_uint8", &CvNp_TestHelper::scalar_uint8)
+
+        .def_readwrite("rect_int", &CvNp_TestHelper::rect_int)
+        .def_readwrite("rect_double", &CvNp_TestHelper::rect_double)
         ;
 
     m.def("cvnp_roundtrip", cvnp_roundtrip);
