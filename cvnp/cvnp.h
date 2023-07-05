@@ -413,7 +413,7 @@ namespace pybind11
                 r.x = tuple[0].cast<_Tp>();
                 r.y = tuple[1].cast<_Tp>();
                 r.width = tuple[2].cast<_Tp>();
-                r.height = tuple[2].cast<_Tp>();
+                r.height = tuple[3].cast<_Tp>();
 
                 value = r;
                 return true;
