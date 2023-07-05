@@ -71,6 +71,60 @@ def test_mat_shared():
     assert are_float_close(o.m[0, 1, 1], 44.1)
 
 
+def test_mat__shared():
+    """
+    We are playing with these elements
+        cv::Mat_<uint8_t> m_uint8 = cv::Mat_<uint8_t>::eye(cv::Size(4, 3));
+        cv::Mat_<int8_t> m_int8 = cv::Mat_<int8_t>::eye(cv::Size(4, 3));
+        cv::Mat_<uint16_t> m_uint16 = cv::Mat_<uint16_t>::eye(cv::Size(4, 3));
+        cv::Mat_<int16_t> m_int16 = cv::Mat_<int16_t>::eye(cv::Size(4, 3));
+        cv::Mat_<int32_t> m_int32 = cv::Mat_<int32_t>::eye(cv::Size(4, 3));
+        cv::Mat_<float> m_float = cv::Mat_<float>::eye(cv::Size(4, 3));
+        cv::Mat_<double> m_double = cv::Mat_<double>::eye(cv::Size(4, 3));
+        void set_m_double(int row, int col, double v) { m_double(row, col) = v; }
+    """
+    # CvNp_TestHelper is a test helper object
+    o = CvNp_TestHelper()
+
+    # Test 1: shapes and types
+    assert o.m_uint8.shape == (3, 4)
+    assert o.m_uint8.dtype.name == "uint8"
+    assert o.m_int8.shape == (3, 4)
+    assert o.m_int8.dtype.name == "int8"
+
+    assert o.m_uint16.shape == (3, 4)
+    assert o.m_uint16.dtype.name == "uint16"
+    assert o.m_int16.shape == (3, 4)
+    assert o.m_int16.dtype.name == "int16"
+
+    assert o.m_int32.shape == (3, 4)
+    assert o.m_int32.dtype.name == "int32"
+
+    assert o.m_float.shape == (3, 4)
+    assert o.m_float.dtype.name == "float32"
+
+    assert o.m_double.shape == (3, 4)
+    assert o.m_double.dtype.name == "float64"
+
+    # Test 2: make a linked python copy, modify it, and assert that changes are visible in C++
+    m_uint8 = o.m_uint8 # m_uint8 is a python linked numpy matrix
+    m_uint8[1, 2] = 3   # modify the python matrix
+    assert(o.m_uint8[1, 2] == 3)  # assert that changes are propagated to C++
+
+    m_int32 = o.m_int32 # m_uint8 is a python linked numpy matrix
+    m_int32[1, 2] = 3   # modify the python matrix
+    assert(o.m_int32[1, 2] == 3)  # assert that changes are propagated to C++
+
+    m_double = o.m_double
+    m_double[1, 2] = 3.5
+    assert(o.m_double[1, 2] == 3.5)
+
+    # Test 3: make changes from c++
+    o.set_m_double(2, 1, 4.5)
+    assert(m_double[2, 1] == 4.5)
+    assert(o.m_double[2, 1] == 4.5)
+
+
 def test_matx_not_shared():
     """
     We are playing with these elements
