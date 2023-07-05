@@ -386,6 +386,46 @@ namespace pybind11
             }
         };
 
+        //
+        // Rect_
+        // No shared memory
+        //
+        template<typename _Tp>
+        struct type_caster<cv::Rect_<_Tp>>
+        {
+            using RectTp = cv::Rect_<_Tp>;
+
+        public:
+        PYBIND11_TYPE_CASTER(RectTp , _("tuple"));
+
+            // Conversion part 1 (Python->C++)
+            bool load(handle src, bool)
+            {
+                if (!isinstance<pybind11::tuple>(src))
+                    return false;
+
+                auto tuple = pybind11::reinterpret_borrow<pybind11::tuple>(src);
+                const auto tupleSize = tuple.size();
+                if (tupleSize != 4)
+                    throw std::invalid_argument("Rect should be a tuple with 4 elements. Got " + std::to_string(tupleSize));
+
+                RectTp r;
+                r.x = tuple[0].cast<_Tp>();
+                r.y = tuple[1].cast<_Tp>();
+                r.width = tuple[2].cast<_Tp>();
+                r.height = tuple[2].cast<_Tp>();
+
+                value = r;
+                return true;
+            }
+
+            // Conversion part 2 (C++ -> Python)
+            static handle cast(const RectTp &value, return_value_policy, handle defval)
+            {
+                auto result = pybind11::make_tuple(value.x, value.y, value.width, value.height);
+                return result.release();
+            }
+        };
 
 
     }  // namespace detail
