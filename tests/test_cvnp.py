@@ -19,6 +19,7 @@ def are_float_close(x: float, y: float):
 
 def test_mat_shared():
     """
+    Test cv::Mat
     We are playing with these elements
         cv::Mat m = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
         void SetM(int row, int col, uchar v) { m.at<uchar>(row, col) = v; }
@@ -73,6 +74,7 @@ def test_mat_shared():
 
 def test_mat__shared():
     """
+    Test cv::Mat_<Tp>
     We are playing with these elements
         cv::Mat_<uint8_t> m_uint8 = cv::Mat_<uint8_t>::eye(cv::Size(4, 3));
         cv::Mat_<int8_t> m_int8 = cv::Mat_<int8_t>::eye(cv::Size(4, 3));
@@ -411,10 +413,42 @@ def test_sub_matrices():
     assert o.m.shape == sub_matrix.shape
 
 
+def test_scalar():
+    """
+    We are playing with this:
+        cv::Scalar scalar_double = cv::Scalar(1.);
+        cv::Scalar_<float> scalar_float = cv::Scalar_<float>(1.f, 2.f);
+        cv::Scalar_<int32_t> scalar_int32 = cv::Scalar_<int32_t>(1, 2, 3);
+        cv::Scalar_<uint8_t> scalar_uint8 = cv::Scalar_<uint8_t>(1, 2, 3, 4);
+    """
+    o = CvNp_TestHelper()
+
+    assert o.scalar_double == (1.0, 0.0, 0.0, 0.0)
+    o.scalar_double = (4.0, 5.0)
+    assert o.scalar_double == (4.0, 5.0, 0.0, 0.0)
+
+    assert o.scalar_float == (1.0, 2.0, 0.0, 0.0)
+    o.scalar_float = (4.0, 5.0, 6.0)
+    assert o.scalar_float == (4.0, 5.0, 6.0, 0.0)
+
+    assert o.scalar_int32 == (1, 2, 3, 0)
+    o.scalar_int32 = (4, 5, 6, 7)
+    assert o.scalar_int32 == (4, 5, 6, 7)
+
+    assert o.scalar_uint8 == (1, 2, 3, 4)
+    o.scalar_uint8 = (4, 5, 6, 7)
+    assert o.scalar_uint8 == (4, 5, 6, 7)
+
+    # Check that setting float values to an int scalar raises an error:
+    with pytest.raises(RuntimeError):
+        o.scalar_int32 = (1.23, 4.56)
+
+
 def main():
     # Todo: find a way to call pytest for this file
     test_refcount()
     test_mat_shared()
+    test_mat__shared()
     test_sub_matrices()
 
     test_vec_not_shared()
@@ -425,6 +459,7 @@ def main():
     test_short_lived_mat()
     test_short_lived_matx()
     test_empty_mat()
+    test_scalar()
 
 
 if __name__ == "__main__":

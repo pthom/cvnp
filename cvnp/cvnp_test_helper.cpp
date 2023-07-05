@@ -80,6 +80,14 @@ struct CvNp_TestHelper
             return 0;
         }
     }
+
+    //
+    // cv::Scalar_
+    //
+    cv::Scalar scalar_double = cv::Scalar(1.);
+    cv::Scalar_<float> scalar_float = cv::Scalar_<float>(1.f, 2.f);
+    cv::Scalar_<int32_t> scalar_int32 = cv::Scalar_<int32_t>(1, 2, 3);
+    cv::Scalar_<uint8_t> scalar_uint8 = cv::Scalar_<uint8_t>(1, 2, 3, 4);
 };
 
 
@@ -162,6 +170,11 @@ void pydef_cvnp_test(pybind11::module& m)
         .def("GetM10", &CvNp_TestHelper::GetM10)
         .def("GetSubM10", &CvNp_TestHelper::GetSubM10)
         .def("m10_refcount", &CvNp_TestHelper::m10_refcount)
+
+        .def_readwrite("scalar_double", &CvNp_TestHelper::scalar_double)
+        .def_readwrite("scalar_float", &CvNp_TestHelper::scalar_float)
+        .def_readwrite("scalar_int32", &CvNp_TestHelper::scalar_int32)
+        .def_readwrite("scalar_uint8", &CvNp_TestHelper::scalar_uint8)
         ;
 
     m.def("cvnp_roundtrip", cvnp_roundtrip);
