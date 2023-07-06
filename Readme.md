@@ -2,13 +2,13 @@
 
 cvnp provides automatic cast between OpenCV matrices and numpy arrays when using pybind11:
 
-* `cv::Mat`: standard OpenCV matrices are transformed to numpy array *with shared memory*
+* `cv::Mat` and `cv::Mat_<Tp>`: standard OpenCV matrices are transformed to numpy array *with shared memory*
   (i.e. modification to matrices elements made from python are immediately visible to C++, and vice-versa).
 * Sub-matrices:
   * Sub-matrices created from C++ can also be shared to python
   * Sub-matrices created from python will need to be transformed to a contiguous array before being shared to C++
 * `cv::Matx`: small matrices are transformed to numpy arrays *without shared memory*
-* Casts *without* shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::Point3` and python `tuple`
+* Casts *without* shared memory for simple types, between `cv::Size`, `cv::Point`, `cv::Point3`, `cv::Scalar_<Tp>`, `cv::Rect_<Tp>` and python `tuple`
 
 > Note: The API evolved on May 4th 2023: see [breaking changes](https://github.com/pthom/cvnp#breaking-changes)
 

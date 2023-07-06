@@ -22,6 +22,16 @@ struct CvNp_TestHelper
     cv::Mat m = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
     void SetM(int row, int col, uchar v) { m.at<uchar>(row, col) = v; }
 
+    // cv::Mat_<Tp> (shared)
+    cv::Mat_<uint8_t> m_uint8 = cv::Mat_<uint8_t>::eye(cv::Size(4, 3));
+    cv::Mat_<int8_t> m_int8 = cv::Mat_<int8_t>::eye(cv::Size(4, 3));
+    cv::Mat_<uint16_t> m_uint16 = cv::Mat_<uint16_t>::eye(cv::Size(4, 3));
+    cv::Mat_<int16_t> m_int16 = cv::Mat_<int16_t>::eye(cv::Size(4, 3));
+    cv::Mat_<int32_t> m_int32 = cv::Mat_<int32_t>::eye(cv::Size(4, 3));
+    cv::Mat_<float> m_float = cv::Mat_<float>::eye(cv::Size(4, 3));
+    cv::Mat_<double> m_double = cv::Mat_<double>::eye(cv::Size(4, 3));
+    void set_m_double(int row, int col, double v) { m_double(row, col) = v; }
+
     //
     // cv::Matx (not shared)
     //
@@ -70,6 +80,20 @@ struct CvNp_TestHelper
             return 0;
         }
     }
+
+    //
+    // cv::Scalar_
+    //
+    cv::Scalar scalar_double = cv::Scalar(1.);
+    cv::Scalar_<float> scalar_float = cv::Scalar_<float>(1.f, 2.f);
+    cv::Scalar_<int32_t> scalar_int32 = cv::Scalar_<int32_t>(1, 2, 3);
+    cv::Scalar_<uint8_t> scalar_uint8 = cv::Scalar_<uint8_t>(1, 2, 3, 4);
+
+    //
+    // cv::Rect
+    //
+    cv::Rect  rect_int = cv::Rect(1, 2, 3, 4);
+    cv::Rect_<double> rect_double = cv::Rect_<double>(5., 6., 7., 8.);
 };
 
 
@@ -118,6 +142,16 @@ void pydef_cvnp_test(pybind11::module& m)
         .def_readwrite("m", &CvNp_TestHelper::m)
         .def("SetM", &CvNp_TestHelper::SetM)
 
+        .def_readwrite("m_uint8", &CvNp_TestHelper::m_uint8)
+        .def_readwrite("m_int8", &CvNp_TestHelper::m_int8)
+        .def_readwrite("m_uint16", &CvNp_TestHelper::m_uint16)
+        .def_readwrite("m_int16", &CvNp_TestHelper::m_int16)
+        .def_readwrite("m_int16", &CvNp_TestHelper::m_int16)
+        .def_readwrite("m_int32", &CvNp_TestHelper::m_int32)
+        .def_readwrite("m_float", &CvNp_TestHelper::m_float)
+        .def_readwrite("m_double", &CvNp_TestHelper::m_double)
+        .def("set_m_double", &CvNp_TestHelper::set_m_double)
+
         .def_readwrite("mx_ns", &CvNp_TestHelper::mx_ns)
         .def("SetMX_ns", &CvNp_TestHelper::SetMX_ns)
 
@@ -142,6 +176,14 @@ void pydef_cvnp_test(pybind11::module& m)
         .def("GetM10", &CvNp_TestHelper::GetM10)
         .def("GetSubM10", &CvNp_TestHelper::GetSubM10)
         .def("m10_refcount", &CvNp_TestHelper::m10_refcount)
+
+        .def_readwrite("scalar_double", &CvNp_TestHelper::scalar_double)
+        .def_readwrite("scalar_float", &CvNp_TestHelper::scalar_float)
+        .def_readwrite("scalar_int32", &CvNp_TestHelper::scalar_int32)
+        .def_readwrite("scalar_uint8", &CvNp_TestHelper::scalar_uint8)
+
+        .def_readwrite("rect_int", &CvNp_TestHelper::rect_int)
+        .def_readwrite("rect_double", &CvNp_TestHelper::rect_double)
         ;
 
     m.def("cvnp_roundtrip", cvnp_roundtrip);

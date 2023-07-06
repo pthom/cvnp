@@ -19,6 +19,7 @@ def are_float_close(x: float, y: float):
 
 def test_mat_shared():
     """
+    Test cv::Mat
     We are playing with these elements
         cv::Mat m = cv::Mat::eye(cv::Size(4, 3), CV_8UC1);
         void SetM(int row, int col, uchar v) { m.at<uchar>(row, col) = v; }
@@ -69,6 +70,61 @@ def test_mat_shared():
     assert are_float_close(o.m[0, 0, 0], 42.1)
     assert are_float_close(o.m[1, 0, 1], 43.1)
     assert are_float_close(o.m[0, 1, 1], 44.1)
+
+
+def test_mat__shared():
+    """
+    Test cv::Mat_<Tp>
+    We are playing with these elements
+        cv::Mat_<uint8_t> m_uint8 = cv::Mat_<uint8_t>::eye(cv::Size(4, 3));
+        cv::Mat_<int8_t> m_int8 = cv::Mat_<int8_t>::eye(cv::Size(4, 3));
+        cv::Mat_<uint16_t> m_uint16 = cv::Mat_<uint16_t>::eye(cv::Size(4, 3));
+        cv::Mat_<int16_t> m_int16 = cv::Mat_<int16_t>::eye(cv::Size(4, 3));
+        cv::Mat_<int32_t> m_int32 = cv::Mat_<int32_t>::eye(cv::Size(4, 3));
+        cv::Mat_<float> m_float = cv::Mat_<float>::eye(cv::Size(4, 3));
+        cv::Mat_<double> m_double = cv::Mat_<double>::eye(cv::Size(4, 3));
+        void set_m_double(int row, int col, double v) { m_double(row, col) = v; }
+    """
+    # CvNp_TestHelper is a test helper object
+    o = CvNp_TestHelper()
+
+    # Test 1: shapes and types
+    assert o.m_uint8.shape == (3, 4)
+    assert o.m_uint8.dtype.name == "uint8"
+    assert o.m_int8.shape == (3, 4)
+    assert o.m_int8.dtype.name == "int8"
+
+    assert o.m_uint16.shape == (3, 4)
+    assert o.m_uint16.dtype.name == "uint16"
+    assert o.m_int16.shape == (3, 4)
+    assert o.m_int16.dtype.name == "int16"
+
+    assert o.m_int32.shape == (3, 4)
+    assert o.m_int32.dtype.name == "int32"
+
+    assert o.m_float.shape == (3, 4)
+    assert o.m_float.dtype.name == "float32"
+
+    assert o.m_double.shape == (3, 4)
+    assert o.m_double.dtype.name == "float64"
+
+    # Test 2: make a linked python copy, modify it, and assert that changes are visible in C++
+    m_uint8 = o.m_uint8 # m_uint8 is a python linked numpy matrix
+    m_uint8[1, 2] = 3   # modify the python matrix
+    assert(o.m_uint8[1, 2] == 3)  # assert that changes are propagated to C++
+
+    m_int32 = o.m_int32 # m_uint8 is a python linked numpy matrix
+    m_int32[1, 2] = 3   # modify the python matrix
+    assert(o.m_int32[1, 2] == 3)  # assert that changes are propagated to C++
+
+    m_double = o.m_double
+    m_double[1, 2] = 3.5
+    assert(o.m_double[1, 2] == 3.5)
+
+    # Test 3: make changes from c++
+    o.set_m_double(2, 1, 4.5)
+    assert(m_double[2, 1] == 4.5)
+    assert(o.m_double[2, 1] == 4.5)
 
 
 def test_matx_not_shared():
@@ -357,10 +413,66 @@ def test_sub_matrices():
     assert o.m.shape == sub_matrix.shape
 
 
+def test_scalar():
+    """
+    We are playing with this:
+        cv::Scalar scalar_double = cv::Scalar(1.);
+        cv::Scalar_<float> scalar_float = cv::Scalar_<float>(1.f, 2.f);
+        cv::Scalar_<int32_t> scalar_int32 = cv::Scalar_<int32_t>(1, 2, 3);
+        cv::Scalar_<uint8_t> scalar_uint8 = cv::Scalar_<uint8_t>(1, 2, 3, 4);
+    """
+    o = CvNp_TestHelper()
+
+    assert o.scalar_double == (1.0, 0.0, 0.0, 0.0)
+    o.scalar_double = (4.0, 5.0)
+    assert o.scalar_double == (4.0, 5.0, 0.0, 0.0)
+
+    assert o.scalar_float == (1.0, 2.0, 0.0, 0.0)
+    o.scalar_float = (4.0, 5.0, 6.0)
+    assert o.scalar_float == (4.0, 5.0, 6.0, 0.0)
+
+    assert o.scalar_int32 == (1, 2, 3, 0)
+    o.scalar_int32 = (4, 5, 6, 7)
+    assert o.scalar_int32 == (4, 5, 6, 7)
+
+    assert o.scalar_uint8 == (1, 2, 3, 4)
+    o.scalar_uint8 = (4, 5, 6, 7)
+    assert o.scalar_uint8 == (4, 5, 6, 7)
+
+    # Check that setting float values to an int scalar raises an error:
+    with pytest.raises(RuntimeError):
+        o.scalar_int32 = (1.23, 4.56)
+
+
+def test_rect():
+    """
+    We are playing with:
+        cv::Rect  rect_int = cv::Rect(1, 2, 3, 4);
+        cv::Rect_<double> rect_double = cv::Rect_<double>(5., 6., 7., 8.);
+    """
+    o = CvNp_TestHelper()
+
+    assert o.rect_int == (1, 2, 3, 4)
+    o.rect_int = (50, 55, 60, 65)
+    assert o.rect_int == (50, 55, 60, 65)
+    with pytest.raises(ValueError):
+        o.rect_int = (1, 2) # We should give 4 values!
+    with pytest.raises(RuntimeError):
+        o.rect_int = (1.1, 2.1, 3.1, 4.1) # We should int values!
+
+    assert o.rect_double == (5.0, 6.0, 7.0, 8.0)
+    o.rect_double = (50.1, 55.2, 60.3, 65.4)
+    assert o.rect_double == (50.1, 55.2, 60.3, 65.4)
+    with pytest.raises(ValueError):
+        o.rect_double = (1, 2) # We should give 4 values!
+
+
+
 def main():
     # Todo: find a way to call pytest for this file
     test_refcount()
     test_mat_shared()
+    test_mat__shared()
     test_sub_matrices()
 
     test_vec_not_shared()
@@ -371,6 +483,8 @@ def main():
     test_short_lived_mat()
     test_short_lived_matx()
     test_empty_mat()
+    test_scalar()
+    test_rect()
 
 
 if __name__ == "__main__":
