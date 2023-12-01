@@ -9,6 +9,8 @@ set(CMAKE_CXX_STANDARD 14)
 # set(Python3_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/venv")
 # find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
+find_package (Eigen3 REQUIRED)
+find_package (OpenCV 4 REQUIRED)
 
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     # For conan, add binary dir to module search path
@@ -46,5 +48,11 @@ else()
     add_library(cvnp INTERFACE)
     target_sources(cvnp INTERFACE ${sources})
     target_link_libraries(cvnp INTERFACE pybind11::pybind11)
-    target_include_directories(cvnp INTERFACE ${CMAKE_CURRENT_LIST_DIR})
+    target_include_directories(
+        cvnp
+        INTERFACE
+        ${CMAKE_CURRENT_LIST_DIR}
+        ${Eigen3_INCLUDE_DIRS}
+        ${OpenCV_INCLUDE_DIRS}
+        )
 endif()
