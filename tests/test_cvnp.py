@@ -4,6 +4,7 @@ import math
 import random
 import pytest
 
+import gc
 import sys
 
 sys.path.append(".")
@@ -342,6 +343,16 @@ def test_refcount():
     assert o.m10_refcount() == 2
     del(m2)
     assert o.m10_refcount() == 1
+
+
+def test_same_mat():
+    o = CvNp_TestHelper()
+    img = np.zeros(shape=(480, 640, 3), dtype=np.uint8)
+
+    for i in range(100):
+        img = o.SameMat(img)
+        gc.collect()
+        print(img)
 
 
 def test_sub_matrices():

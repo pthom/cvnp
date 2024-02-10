@@ -81,6 +81,10 @@ struct CvNp_TestHelper
         }
     }
 
+    cv::Mat SameMat(cv::Mat m) {
+        return m;
+    }
+
     //
     // cv::Scalar_
     //
@@ -176,6 +180,7 @@ void pydef_cvnp_test(pybind11::module& m)
         .def("GetM10", &CvNp_TestHelper::GetM10)
         .def("GetSubM10", &CvNp_TestHelper::GetSubM10)
         .def("m10_refcount", &CvNp_TestHelper::m10_refcount)
+        .def("SameMat", &CvNp_TestHelper::SameMat)
 
         .def_readwrite("scalar_double", &CvNp_TestHelper::scalar_double)
         .def_readwrite("scalar_float", &CvNp_TestHelper::scalar_float)
