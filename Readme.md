@@ -224,21 +224,15 @@ pip install -r requirements.txt
 
 ### Install C++ dependencies (pybind11, OpenCV)
 
-You will need to have `pybind11` and `OpenCV` installed on your system. You can install them with vcpkg for example:
-
-```bash
-git clone https://github.com/microsoft/vcpkg.git
-./vcpkg/bootstrap-vcpkg.sh
-./vcpkg/vcpkg install opencv pybind11
-```
+You will need to have `OpenCV` installed on your system (you can use `vcpkg` or your package manager).
 
 ### Build
 
-You need to specify the path to the python executable (and optionally the path to the vcpkg toolchain file):
+You need to specify the path to the python executable:
 
 ```bash
 mkdir build && cd build
-cmake .. -DPython_EXECUTABLE=../venv/bin/python  -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake .. -DPython_EXECUTABLE=../venv/bin/python
 make
 ```
 
