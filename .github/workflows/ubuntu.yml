@@ -12,20 +12,35 @@ jobs:
     - name: Checkout submodules
       run: git submodule update --init --recursive
 
-    - name: Install OpenCV and SDL via apt
-      run: sudo apt-get install -y libopencv-dev
+    - name: install libopencv-dev
+      run: |
+          sudo apt-get update
+          sudo sudo apt-get install -y libopencv-dev
+
+    - name: vcpkg install
+      uses: johnwason/vcpkg-action@v6
+      id: vcpkg
+      with:
+        pkgs: 'pybind11'
+        token: ${{ github.token }}
+        triplet: x64-linux
+        github-binarycache: true
+
+#    - name: Setup interactive tmate session
+#      uses: mxschmitt/action-tmate@v3
 
     - name: run_build_all
       run:  |
+        export VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT
+        vcpkg install pybind11
         python -m venv venv
         source venv/bin/activate
         pip install -r requirements.txt
         mkdir build
         cd build
-        conan install ../conanfile_pybind_only.txt
-        cmake ..
+        cmake .. -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DPython_EXECUTABLE=$(which python) -DCMAKE_BUILD_TYPE=Release
         make -j
-    
+
     - name: tests
       run: |
         source venv/bin/activate

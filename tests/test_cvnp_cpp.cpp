@@ -146,19 +146,17 @@ void test_nparray_to_mat()
     pybind11::array aa = cvnp::mat_to_nparray(m);
     auto aa_shape = aa.shape();
     cv::Mat mm = cvnp::nparray_to_mat(aa);
-    printf("Aghh");
 }
 
 
-int main()
+int main(int argc, char** argv)
 {
-    // If numpy is not installed globally, set site_packages_path
-    std::string site_packages_path;
+    if (argc != 2)
     {
-        // In this example, we are using a virtual env
-        std::string venv_path = "../venv";
-        site_packages_path = venv_path + "/lib/python3.11/site-packages";
+        std::cerr << "Usage: " << argv[0] << " <path_to_site_packages>\n";
+        return 1;
     }
+    const char* site_packages_path = argv[1];
 
     // We need to instantiate an interpreter before the tests,
     // and give it the path to the site_packages folder, so that pybind11 can access numpy

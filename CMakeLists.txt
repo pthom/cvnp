@@ -3,11 +3,21 @@ project(cvnp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
-#
-# Use the lines below to force the usage your own version of python
-#
-# set(Python3_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/venv")
-# find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+if(NOT Python_EXECUTABLE)
+    message(FATAL_ERROR "
+    Please set the Python_EXECUTABLE variable to a python interpreter
+    where you installed numpy and opencv. For example:
+
+        cmake .. -DPython_EXECUTABLE=/venv/bin/python
+")
+endif()
+
+# Find site-packages directory
+execute_process(
+    COMMAND ${Python_EXECUTABLE} -c "import site; print(site.getsitepackages()[0])"
+    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_DIRECTORY
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
 
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
@@ -34,9 +44,11 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     target_include_directories(test_cvnp_cpp PRIVATE ${CMAKE_CURRENT_LIST_DIR})
     target_link_libraries(test_cvnp_cpp PRIVATE opencv_core)
     find_package(Python3 REQUIRED COMPONENTS Development)
-    target_link_libraries(test_cvnp_cpp PRIVATE pybind11::pybind11)
+    target_link_libraries(test_cvnp_cpp PRIVATE pybind11::pybind11 Python3::Python)
     enable_testing()
-    add_test(NAME test_cvnp_cpp COMMAND test_cvnp_cpp)
+    add_test(NAME test_cvnp_cpp COMMAND test_cvnp_cpp ${PYTHON_SITE_PACKAGES_DIRECTORY} )
+
+    # python test target
     add_test(NAME test_cvnp_python COMMAND pytest ${CMAKE_SOURCE_DIR}/tests)
 else()
     # in order to use cvnp from another project, do this:   

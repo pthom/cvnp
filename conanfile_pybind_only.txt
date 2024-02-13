@@ -1,5 +1,0 @@
-[requires]
-pybind11/2.10.1
-
-[generators]
-cmake_find_package
