@@ -151,7 +151,8 @@ void test_nparray_to_mat()
 }
 
 
-//Python seems to fail with the following C++ function:
+// See https://github.com/pthom/cvnp/issues/13
+// Python seems to fail with the following C++ function:
 //cpp:
 //    m.def("test", [](cv::Mat mat) {
 //        return mat;
@@ -199,6 +200,7 @@ void test_lifetime()
            py::str(img).cast<std::string>().c_str());
 }
 
+// We ignore leaks inside python itself
 #ifdef __cplusplus
 extern "C"
 #endif
