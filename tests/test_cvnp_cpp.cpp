@@ -9,6 +9,9 @@ namespace py = pybind11;
 #include <algorithm>
 #include <cctype>
 
+#include <opencv2/core/core.hpp>
+
+
 std::string trim(const std::string& s)
 {
     auto start = std::find_if_not(s.begin(), s.end(), ::isspace);
@@ -145,8 +148,61 @@ void test_nparray_to_mat()
 
     pybind11::array aa = cvnp::mat_to_nparray(m);
     auto aa_shape = aa.shape();
-    cv::Mat mm = cvnp::nparray_to_mat(aa);
 }
+
+
+//Python seems to fail with the following C++ function:
+//cpp:
+//    m.def("test", [](cv::Mat mat) {
+//        return mat;
+//      });
+//When used this way:
+//    img = np.zeros(shape=(480, 640, 3), dtype=np.uint8)
+//    img = test(img)
+void test_lifetime()
+{
+    // We need to create a big array to trigger a segfault
+    auto create_example_array = []() -> pybind11::array
+    {
+        constexpr int rows = 1000, cols = 1000;
+        std::vector<pybind11::ssize_t> a_shape{rows, cols};
+        std::vector<pybind11::ssize_t> a_strides{};
+        pybind11::dtype a_dtype = pybind11::dtype(pybind11::format_descriptor<int32_t>::format());
+        pybind11::array a(a_dtype, a_shape, a_strides);
+        // Set initial values
+        for(int i=0; i<rows; ++i)
+            for(int j=0; j<cols; ++j)
+                *((int32_t *)a.mutable_data(j, i)) = j * rows + i;
+
+        printf("Created array data address =%p\n%s\n",
+               a.data(),
+               py::str(a).cast<std::string>().c_str());
+        return a;
+    };
+
+    // Let's reimplement the bound version of the test function via pybind11:
+    auto test_bound = [](pybind11::array& a) {
+        cv::Mat m = cvnp::nparray_to_mat(a);
+        return cvnp::mat_to_nparray(m);
+    };
+
+    // Now let's reimplement the failing python code in C++
+    //    img = np.zeros(shape=(480, 640, 3), dtype=np.uint8)
+    //    img = test(img)
+    auto img = create_example_array();
+    img = test_bound(img);
+
+    // Let's try to change the content of the img array
+    *((int32_t *)img.mutable_data(0, 0)) = 14;  // This triggers an error that ASAN catches
+    printf("img data address =%p\n%s\n",
+           img.data(),
+           py::str(img).cast<std::string>().c_str());
+}
+
+#ifdef __cplusplus
+extern "C"
+#endif
+const char* __asan_default_options() { return "detect_leaks=0"; }
 
 
 int main(int argc, char** argv)
@@ -170,4 +226,8 @@ int main(int argc, char** argv)
     test_nparray_to_mat();
     test_submatrix();
     test_non_continuous_mat();
+
+#ifdef CVNP_ENABLE_ASAN
+    test_lifetime();
+#endif
 }

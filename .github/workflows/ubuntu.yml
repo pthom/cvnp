@@ -35,3 +35,12 @@ jobs:
         source venv/bin/activate
         cd build/
         cmake --build . --target test
+
+    - name: build & test with asan
+      run: |
+        source venv/bin/activate
+        mkdir build_asan && cd build_asan
+        cmake .. -DPython_EXECUTABLE=$(which python) -DCMAKE_BUILD_TYPE=Debug -DCVNP_ENABLE_ASAN=ON
+        make -j
+        ./test_cvnp_cpp ../venv/lib/python3.10/site-packages
+        

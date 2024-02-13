@@ -21,6 +21,13 @@ execute_process(
 
 
 if (PROJECT_IS_TOP_LEVEL)
+    # Add address sanitizer
+    option(CVNP_ENABLE_ASAN "Enable Address Sanitizer" OFF)
+    if (CVNP_ENABLE_ASAN)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+        add_compile_definitions(CVNP_ENABLE_ASAN)
+    endif()
+
     #
     # Requirements: python3, opencv
     #
