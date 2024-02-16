@@ -16,22 +16,27 @@ namespace cvnp
         class CvnpAllocator : public cv::MatAllocator
         {
         public:
-            CvnpAllocator() { stdAllocator = cv::Mat::getStdAllocator(); }
-            ~CvnpAllocator() {}
+            CvnpAllocator() = default;
+            ~CvnpAllocator() = default;
 
-            cv::UMatData* allocate(pybind11::array& a) const
+            // Attaches a numpy array object to a cv::Mat
+            static void attach_nparray(cv::Mat &m, pybind11::array& a)
             {
-                cv::UMatData* u = new cv::UMatData(this);
+                static CvnpAllocator instance;
+
+                cv::UMatData* u = new cv::UMatData(&instance);
                 u->data = u->origdata = (uchar*)a.mutable_data(0);
                 u->size = a.size();
                 u->userdata = a.inc_ref().ptr();
+                u->refcount = 1;
 
                 #ifdef DEBUG_ALLOCATOR
                 ++nbAllocations;
-                printf("CvnpAllocator::allocate(py::array) nbAllocations=%d\n", nbAllocations);
+                printf("CvnpAllocator::attach_nparray(py::array) nbAllocations=%d\n", nbAllocations);
                 #endif
 
-                return u;
+                m.u = u;
+                m.allocator = &instance;
             }
 
             cv::UMatData* allocate(int dims0, const int* sizes, int type, void* data, size_t* step, cv::AccessFlag flags, cv::UMatUsageFlags usageFlags) const override
@@ -56,6 +61,7 @@ namespace cvnp
                     return;
                 }
 
+                // This function can be called from anywhere, so need the GIL
                 py::gil_scoped_acquire gil;
                 assert(u->urefcount >= 0);
                 assert(u->refcount >= 0);
@@ -79,13 +85,11 @@ namespace cvnp
                     #endif
                 }
             }
-            const cv::MatAllocator* stdAllocator;
+
             #ifdef DEBUG_ALLOCATOR
             mutable int nbAllocations = 0;
             #endif
         };
-
-        static CvnpAllocator g_cvnpAllocator;
 
         py::dtype determine_np_dtype(int cv_depth)
         {
@@ -206,11 +210,7 @@ namespace cvnp
         cv::Mat m(size, type, is_not_empty ? a.mutable_data(0) : nullptr);
 
         if (is_not_empty) {
-            m.u = detail::g_cvnpAllocator.allocate(a); //, ndims, size, type, step);
-            m.allocator = &detail::g_cvnpAllocator;
-
-            // this doesn't leak, but I don't know why
-            m.addref();
+            detail::CvnpAllocator::attach_nparray(m, a); //, ndims, size, type, step);
         }
 
         return m;
