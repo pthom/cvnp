@@ -8,44 +8,53 @@ namespace cvnp
 
     namespace detail
     {
+        // #define DEBUG_ALLOCATOR
+
         namespace py = pybind11;
 
         // Translated from cv2_numpy.cpp in OpenCV source code
-        class CvnpAllocator : public cv::MatAllocator {
+        class CvnpAllocator : public cv::MatAllocator
+        {
         public:
             CvnpAllocator() { stdAllocator = cv::Mat::getStdAllocator(); }
             ~CvnpAllocator() {}
 
-            cv::UMatData* allocate(pybind11::array& a) const {
-                //int dims, const int* sizes, int type, size_t* step) const {
+            cv::UMatData* allocate(pybind11::array& a) const
+            {
                 cv::UMatData* u = new cv::UMatData(this);
                 u->data = u->origdata = (uchar*)a.mutable_data(0);
-                // auto *strides = a.strides();
-                // for( int i = 0; i < dims - 1; i++ )
-                //     step[i] = (size_t)_strides[i];
-                // step[dims-1] = CV_ELEM_SIZE(type);
-                // u->size = sizes[0]*step[0];
                 u->size = a.size();
                 u->userdata = a.inc_ref().ptr();
+
+                #ifdef DEBUG_ALLOCATOR
+                ++nbAllocations;
+                printf("CvnpAllocator::allocate(py::array) nbAllocations=%d\n", nbAllocations);
+                #endif
+
                 return u;
             }
 
             cv::UMatData* allocate(int dims0, const int* sizes, int type, void* data, size_t* step, cv::AccessFlag flags, cv::UMatUsageFlags usageFlags) const override
             {
-                // TODO: I don't think this is ever called
-                throw py::value_error("should never happen");
+                throw py::value_error("CvnpAllocator::allocate \"standard\" should never happen");
                 // return stdAllocator->allocate(dims0, sizes, type, data, step, flags, usageFlags);
             }
 
-            bool allocate(cv::UMatData* u, cv::AccessFlag accessFlags, cv::UMatUsageFlags usageFlags) const override {
-                // TODO: I don't think this is ever called
-                throw py::value_error("should never happen");
+            bool allocate(cv::UMatData* u, cv::AccessFlag accessFlags, cv::UMatUsageFlags usageFlags) const override
+            {
+                throw py::value_error("CvnpAllocator::allocate \"copy\" should never happen");
                 // return stdAllocator->allocate(u, accessFlags, usageFlags);
             }
 
-            void deallocate(cv::UMatData* u) const override {
+            void deallocate(cv::UMatData* u) const override
+            {
                 if(!u)
+                {
+                    #ifdef DEBUG_ALLOCATOR
+                    printf("CvnpAllocator::deallocate() with null ptr!!! nbAllocations=%d\n", nbAllocations);
+                    #endif
                     return;
+                }
 
                 py::gil_scoped_acquire gil;
                 assert(u->urefcount >= 0);
@@ -55,9 +64,25 @@ namespace cvnp
                     PyObject* o = (PyObject*)u->userdata;
                     Py_XDECREF(o);
                     delete u;
+                    #ifdef DEBUG_ALLOCATOR
+                    --nbAllocations;
+                    printf("CvnpAllocator::deallocate() nbAllocations=%d\n", nbAllocations);
+                    #endif
+                }
+                else
+                {
+                    #ifdef DEBUG_ALLOCATOR
+                    ++nbAllocations;
+                    printf("CvnpAllocator::deallocate() - not doing anything since urefcount=%d nbAllocations=%d\n",
+                            u->urefcount,
+                           nbAllocations);
+                    #endif
                 }
             }
             const cv::MatAllocator* stdAllocator;
+            #ifdef DEBUG_ALLOCATOR
+            mutable int nbAllocations = 0;
+            #endif
         };
 
         static CvnpAllocator g_cvnpAllocator;
