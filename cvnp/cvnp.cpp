@@ -9,7 +9,59 @@ namespace cvnp
     namespace detail
     {
         namespace py = pybind11;
-        
+
+        // Translated from cv2_numpy.cpp in OpenCV source code
+        class CvnpAllocator : public cv::MatAllocator {
+        public:
+            CvnpAllocator() { stdAllocator = cv::Mat::getStdAllocator(); }
+            ~CvnpAllocator() {}
+
+            cv::UMatData* allocate(pybind11::array& a) const {
+                //int dims, const int* sizes, int type, size_t* step) const {
+                cv::UMatData* u = new cv::UMatData(this);
+                u->data = u->origdata = (uchar*)a.mutable_data(0);
+                // auto *strides = a.strides();
+                // for( int i = 0; i < dims - 1; i++ )
+                //     step[i] = (size_t)_strides[i];
+                // step[dims-1] = CV_ELEM_SIZE(type);
+                // u->size = sizes[0]*step[0];
+                u->size = a.size();
+                u->userdata = a.inc_ref().ptr();
+                return u;
+            }
+
+            cv::UMatData* allocate(int dims0, const int* sizes, int type, void* data, size_t* step, cv::AccessFlag flags, cv::UMatUsageFlags usageFlags) const override
+            {
+                // TODO: I don't think this is ever called
+                throw py::value_error("should never happen");
+                // return stdAllocator->allocate(dims0, sizes, type, data, step, flags, usageFlags);
+            }
+
+            bool allocate(cv::UMatData* u, cv::AccessFlag accessFlags, cv::UMatUsageFlags usageFlags) const override {
+                // TODO: I don't think this is ever called
+                throw py::value_error("should never happen");
+                // return stdAllocator->allocate(u, accessFlags, usageFlags);
+            }
+
+            void deallocate(cv::UMatData* u) const override {
+                if(!u)
+                    return;
+
+                py::gil_scoped_acquire gil;
+                assert(u->urefcount >= 0);
+                assert(u->refcount >= 0);
+                if(u->refcount == 0)
+                {
+                    PyObject* o = (PyObject*)u->userdata;
+                    Py_XDECREF(o);
+                    delete u;
+                }
+            }
+            const cv::MatAllocator* stdAllocator;
+        };
+
+        static CvnpAllocator g_cvnpAllocator;
+
         py::dtype determine_np_dtype(int cv_depth)
         {
             for (auto format_synonym : cvnp::sTypeSynonyms)
@@ -127,6 +179,15 @@ namespace cvnp
         int type = detail::determine_cv_type(a, depth);
         cv::Size size = detail::determine_cv_size(a);
         cv::Mat m(size, type, is_not_empty ? a.mutable_data(0) : nullptr);
+
+        if (is_not_empty) {
+            m.u = detail::g_cvnpAllocator.allocate(a); //, ndims, size, type, step);
+            m.allocator = &detail::g_cvnpAllocator;
+
+            // this doesn't leak, but I don't know why
+            m.addref();
+        }
+
         return m;
     }
 
