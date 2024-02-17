@@ -10,6 +10,10 @@ namespace cvnp
     {
         // #define DEBUG_ALLOCATOR
 
+        #ifdef DEBUG_ALLOCATOR
+        int nbAllocations = 0;
+        #endif
+
         namespace py = pybind11;
 
         // Translated from cv2_numpy.cpp in OpenCV source code
@@ -78,17 +82,12 @@ namespace cvnp
                 else
                 {
                     #ifdef DEBUG_ALLOCATOR
-                    ++nbAllocations;
                     printf("CvnpAllocator::deallocate() - not doing anything since urefcount=%d nbAllocations=%d\n",
                             u->urefcount,
                            nbAllocations);
                     #endif
                 }
             }
-
-            #ifdef DEBUG_ALLOCATOR
-            mutable int nbAllocations = 0;
-            #endif
         };
 
         py::dtype determine_np_dtype(int cv_depth)
@@ -216,7 +215,7 @@ namespace cvnp
         return m;
     }
 
-    // this version tries to handles strides and submatrices
+    // this version tries to handle strides and sub-matrices
     // this is WIP, currently broken, and not used
     cv::Mat nparray_to_mat_with_strides_broken(pybind11::array& a)
     {
