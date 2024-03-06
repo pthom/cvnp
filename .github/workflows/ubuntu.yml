@@ -12,8 +12,13 @@ jobs:
     - name: Checkout submodules
       run: git submodule update --init --recursive
 
-    - name: Install OpenCV and SDL via apt
-      run: sudo apt-get install -y libopencv-dev
+    - name: install libopencv-dev
+      run: |
+          sudo apt-get update
+          sudo sudo apt-get install -y libopencv-dev
+
+#    - name: Setup interactive tmate session
+#      uses: mxschmitt/action-tmate@v3
 
     - name: run_build_all
       run:  |
@@ -22,12 +27,20 @@ jobs:
         pip install -r requirements.txt
         mkdir build
         cd build
-        conan install ../conanfile_pybind_only.txt
-        cmake ..
+        cmake .. -DPython_EXECUTABLE=$(which python) -DCMAKE_BUILD_TYPE=Release
         make -j
-    
+
     - name: tests
       run: |
         source venv/bin/activate
         cd build/
         cmake --build . --target test
+
+    - name: build & test with asan
+      run: |
+        source venv/bin/activate
+        mkdir build_asan && cd build_asan
+        cmake .. -DPython_EXECUTABLE=$(which python) -DCMAKE_BUILD_TYPE=Debug -DCVNP_ENABLE_ASAN=ON
+        make -j
+        ./test_cvnp_cpp ../venv/lib/python3.10/site-packages
+        

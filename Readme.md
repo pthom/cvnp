@@ -91,9 +91,9 @@ You will get two simple functions:
 * cvnp.print_types_synonyms()
 
 ```python
->>> import cvnp
->>> import pprint
->>> pprint.pprint(cvnp.list_types_synonyms(), indent=2, width=120)
+import cvnp
+import pprint
+pprint.pprint(cvnp.list_types_synonyms(), indent=2, width=120)
 [ {'cv_depth': 0, 'cv_depth_name': 'CV_8U', 'np_format': 'B', 'np_format_long': 'np.uint8'},
   {'cv_depth': 1, 'cv_depth_name': 'CV_8S', 'np_format': 'b', 'np_format_long': 'np.int8'},
   {'cv_depth': 2, 'cv_depth_name': 'CV_16U', 'np_format': 'H', 'np_format_long': 'np.uint16'},
@@ -214,22 +214,25 @@ def test_matx_not_shared():
 
 _These steps are only for development and testing of this package, they are not required in order to use it in a different project._
 
-### Build
+### install python dependencies (opencv-python, pytest, numpy)
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+```
 
-mkdir build
-cd build
+### Install C++ dependencies (pybind11, OpenCV)
 
-# if you do not have a global install of OpenCV and pybind11
-conan install .. --build=missing
-# if you do have a global install of OpenCV, but not pybind11
-conan install ../conanfile_pybind_only.txt --build=missing
+You will need to have `OpenCV` installed on your system (you can use `vcpkg` or your package manager).
 
-cmake ..
+### Build
+
+You need to specify the path to the python executable:
+
+```bash
+mkdir build && cd build
+cmake .. -DPython_EXECUTABLE=../venv/bin/python
 make
 ```
 
@@ -240,6 +243,8 @@ In the build dir, run:
 ```
 cmake --build . --target test
 ```
+
+(this will run native C++ tests and python tests)
 
 ### Deep clean
 

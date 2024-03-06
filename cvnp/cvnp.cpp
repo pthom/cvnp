@@ -8,8 +8,88 @@ namespace cvnp
 
     namespace detail
     {
+        // #define DEBUG_ALLOCATOR
+
+        #ifdef DEBUG_ALLOCATOR
+        int nbAllocations = 0;
+        #endif
+
         namespace py = pybind11;
-        
+
+        // Translated from cv2_numpy.cpp in OpenCV source code
+        class CvnpAllocator : public cv::MatAllocator
+        {
+        public:
+            CvnpAllocator() = default;
+            ~CvnpAllocator() = default;
+
+            // Attaches a numpy array object to a cv::Mat
+            static void attach_nparray(cv::Mat &m, pybind11::array& a)
+            {
+                static CvnpAllocator instance;
+
+                cv::UMatData* u = new cv::UMatData(&instance);
+                u->data = u->origdata = (uchar*)a.mutable_data(0);
+                u->size = a.size();
+                u->userdata = a.inc_ref().ptr();
+                u->refcount = 1;
+
+                #ifdef DEBUG_ALLOCATOR
+                ++nbAllocations;
+                printf("CvnpAllocator::attach_nparray(py::array) nbAllocations=%d\n", nbAllocations);
+                #endif
+
+                m.u = u;
+                m.allocator = &instance;
+            }
+
+            cv::UMatData* allocate(int dims0, const int* sizes, int type, void* data, size_t* step, cv::AccessFlag flags, cv::UMatUsageFlags usageFlags) const override
+            {
+                throw py::value_error("CvnpAllocator::allocate \"standard\" should never happen");
+                // return stdAllocator->allocate(dims0, sizes, type, data, step, flags, usageFlags);
+            }
+
+            bool allocate(cv::UMatData* u, cv::AccessFlag accessFlags, cv::UMatUsageFlags usageFlags) const override
+            {
+                throw py::value_error("CvnpAllocator::allocate \"copy\" should never happen");
+                // return stdAllocator->allocate(u, accessFlags, usageFlags);
+            }
+
+            void deallocate(cv::UMatData* u) const override
+            {
+                if(!u)
+                {
+                    #ifdef DEBUG_ALLOCATOR
+                    printf("CvnpAllocator::deallocate() with null ptr!!! nbAllocations=%d\n", nbAllocations);
+                    #endif
+                    return;
+                }
+
+                // This function can be called from anywhere, so need the GIL
+                py::gil_scoped_acquire gil;
+                assert(u->urefcount >= 0);
+                assert(u->refcount >= 0);
+                if(u->refcount == 0)
+                {
+                    PyObject* o = (PyObject*)u->userdata;
+                    Py_XDECREF(o);
+                    delete u;
+                    #ifdef DEBUG_ALLOCATOR
+                    --nbAllocations;
+                    printf("CvnpAllocator::deallocate() nbAllocations=%d\n", nbAllocations);
+                    #endif
+                }
+                else
+                {
+                    #ifdef DEBUG_ALLOCATOR
+                    printf("CvnpAllocator::deallocate() - not doing anything since urefcount=%d nbAllocations=%d\n",
+                            u->urefcount,
+                           nbAllocations);
+                    #endif
+                }
+            }
+        };
+
         py::dtype determine_np_dtype(int cv_depth)
         {
             for (auto format_synonym : cvnp::sTypeSynonyms)
@@ -127,10 +207,15 @@ namespace cvnp
         int type = detail::determine_cv_type(a, depth);
         cv::Size size = detail::determine_cv_size(a);
         cv::Mat m(size, type, is_not_empty ? a.mutable_data(0) : nullptr);
+
+        if (is_not_empty) {
+            detail::CvnpAllocator::attach_nparray(m, a); //, ndims, size, type, step);
+        }
+
         return m;
     }
 
-    // this version tries to handles strides and submatrices
+    // this version tries to handle strides and sub-matrices
     // this is WIP, currently broken, and not used
     cv::Mat nparray_to_mat_with_strides_broken(pybind11::array& a)
     {

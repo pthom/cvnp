@@ -11,3 +11,5 @@ __pycache__
 .vscode/
 cmake-build-*/
 .idea/
+vcpkg/
+pybind11/
