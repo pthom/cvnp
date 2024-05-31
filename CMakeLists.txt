@@ -77,8 +77,6 @@ else()
     #       add_subdirectory(path/to/cvnp)
     #       target_link_libraries(your_target PRIVATE cvnp)
 
-    find_package (Eigen3 REQUIRED)
-    find_package (OpenCV 4 REQUIRED)
     file(GLOB sources src/*.cpp)
     add_library(cvnp INTERFACE)
     target_sources(cvnp INTERFACE ${sources})
