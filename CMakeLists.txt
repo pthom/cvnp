@@ -19,8 +19,6 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-find_package (Eigen3 REQUIRED)
-find_package (OpenCV 4 REQUIRED)
 
 if (PROJECT_IS_TOP_LEVEL)
     # Add address sanitizer
@@ -50,10 +48,10 @@ if (PROJECT_IS_TOP_LEVEL)
     #
     # Build cvnp python module
     #
-    file(GLOB sources cvnp/*.h cvnp/*.cpp)
+    file(GLOB sources src/*.cpp)
     pybind11_add_module(cvnp ${sources} main/cvnp_main.cpp)
     target_link_libraries(cvnp PUBLIC opencv_core)
-    target_include_directories(cvnp PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+    target_include_directories(cvnp PUBLIC ${CMAKE_SOURCE_DIR}/include)
     # Copy the .so or .pyd module into this dir, to facilitate the tests
     add_custom_command(
         TARGET cvnp POST_BUILD
@@ -64,7 +62,7 @@ if (PROJECT_IS_TOP_LEVEL)
     # c++ test target
     #
     add_executable(test_cvnp_cpp tests/test_cvnp_cpp.cpp ${sources})
-    target_include_directories(test_cvnp_cpp PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+    target_include_directories(test_cvnp_cpp PRIVATE ${CMAKE_SOURCE_DIR}/include)
     target_link_libraries(test_cvnp_cpp PRIVATE opencv_core)
     target_link_libraries(test_cvnp_cpp PRIVATE pybind11::pybind11 Python3::Python)
     enable_testing()
@@ -78,15 +76,16 @@ else()
     # in order to use cvnp from another project, do this:   
     #       add_subdirectory(path/to/cvnp)
     #       target_link_libraries(your_target PRIVATE cvnp)
-    file(GLOB sources cvnp/*.h cvnp/*.cpp)
+
+    find_package (Eigen3 REQUIRED)
+    find_package (OpenCV 4 REQUIRED)
+    file(GLOB sources src/*.cpp)
     add_library(cvnp INTERFACE)
     target_sources(cvnp INTERFACE ${sources})
     target_link_libraries(cvnp INTERFACE pybind11::pybind11)
     target_include_directories(
         cvnp
         INTERFACE
-        ${CMAKE_CURRENT_LIST_DIR}
-        ${Eigen3_INCLUDE_DIRS}
-        ${OpenCV_INCLUDE_DIRS}
+        ${CMAKE_SOURCE_DIR}/include
         )
 endif()
