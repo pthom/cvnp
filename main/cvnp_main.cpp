@@ -6,7 +6,7 @@ void pydef_cvnp(pybind11::module& m);
 void pydef_cvnp_test(pybind11::module& m);
 
 
-PYBIND11_MODULE(cvnp, m)
+PYBIND11_MODULE(py_cvnp, m)
 {
     pydef_cvnp_test(m);
     pydef_cvnp(m);

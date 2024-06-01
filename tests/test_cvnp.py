@@ -10,7 +10,7 @@ sys.path.append(".")
 sys.path.append("..")
 
 
-from cvnp import CvNp_TestHelper, cvnp_roundtrip, short_lived_matx, short_lived_mat  # type: ignore
+from py_cvnp import CvNp_TestHelper, cvnp_roundtrip, short_lived_matx, short_lived_mat  # type: ignore
 
 
 def are_float_close(x: float, y: float):
@@ -109,22 +109,22 @@ def test_mat__shared():
     assert o.m_double.dtype.name == "float64"
 
     # Test 2: make a linked python copy, modify it, and assert that changes are visible in C++
-    m_uint8 = o.m_uint8 # m_uint8 is a python linked numpy matrix
-    m_uint8[1, 2] = 3   # modify the python matrix
-    assert(o.m_uint8[1, 2] == 3)  # assert that changes are propagated to C++
+    m_uint8 = o.m_uint8  # m_uint8 is a python linked numpy matrix
+    m_uint8[1, 2] = 3  # modify the python matrix
+    assert o.m_uint8[1, 2] == 3  # assert that changes are propagated to C++
 
-    m_int32 = o.m_int32 # m_uint8 is a python linked numpy matrix
-    m_int32[1, 2] = 3   # modify the python matrix
-    assert(o.m_int32[1, 2] == 3)  # assert that changes are propagated to C++
+    m_int32 = o.m_int32  # m_uint8 is a python linked numpy matrix
+    m_int32[1, 2] = 3  # modify the python matrix
+    assert o.m_int32[1, 2] == 3  # assert that changes are propagated to C++
 
     m_double = o.m_double
     m_double[1, 2] = 3.5
-    assert(o.m_double[1, 2] == 3.5)
+    assert o.m_double[1, 2] == 3.5
 
     # Test 3: make changes from c++
     o.set_m_double(2, 1, 4.5)
-    assert(m_double[2, 1] == 4.5)
-    assert(o.m_double[2, 1] == 4.5)
+    assert m_double[2, 1] == 4.5
+    assert o.m_double[2, 1] == 4.5
 
 
 def test_matx_not_shared():
@@ -139,15 +139,17 @@ def test_matx_not_shared():
     # create object
     o = CvNp_TestHelper()
 
-    m_linked = o.mx_ns                   # Make a numy array that is a copy of mx_ns *without* shared memory
-    assert m_linked.shape == (3, 2)      # check its shape
-    m_linked[1, 1] = 3                   # a value change in the numpy array made from python
-    assert o.mx_ns[1, 1] != 3            # is not visible from C++!
+    m_linked = (
+        o.mx_ns
+    )  # Make a numy array that is a copy of mx_ns *without* shared memory
+    assert m_linked.shape == (3, 2)  # check its shape
+    m_linked[1, 1] = 3  # a value change in the numpy array made from python
+    assert o.mx_ns[1, 1] != 3  # is not visible from C++!
 
-    o.SetMX_ns(2, 1, 15)                             # A C++ change a value in the matrix
-    assert not are_float_close(m_linked[2, 1], 15)   # is not visible from python,
-    m_linked = o.mx_ns                               # but becomes visible after we re-create the numpy array from
-    assert are_float_close(m_linked[2, 1], 15)       # the cv::Matx
+    o.SetMX_ns(2, 1, 15)  # A C++ change a value in the matrix
+    assert not are_float_close(m_linked[2, 1], 15)  # is not visible from python,
+    m_linked = o.mx_ns  # but becomes visible after we re-create the numpy array from
+    assert are_float_close(m_linked[2, 1], 15)  # the cv::Matx
 
     # Make a clone of the C++ mat and change a value in it
     # => Make sure that the C++ mat is not impacted
@@ -184,13 +186,13 @@ def test_vec_not_shared():
     """
     o = CvNp_TestHelper()
     assert o.v3_ns.shape == (3, 1)
-    assert o.v3_ns[0] == 1.
+    assert o.v3_ns[0] == 1.0
 
     o.v3_ns[0] = 10
-    assert o.v3_ns[0] != 10. # Vec are not shared
+    assert o.v3_ns[0] != 10.0  # Vec are not shared
 
     o.SetV3_ns(0, 10)
-    assert o.v3_ns[0] == 10.
+    assert o.v3_ns[0] == 10.0
 
 
 def test_size():
@@ -251,7 +253,15 @@ def test_cvnp_round_trip():
     m2 = cvnp_roundtrip(m)
     assert (m == m2).all()
 
-    possible_types = [np.uint8, np.int8, np.uint16, np.int16, np.int32, float, np.float64]
+    possible_types = [
+        np.uint8,
+        np.int8,
+        np.uint16,
+        np.int16,
+        np.int32,
+        float,
+        np.float64,
+    ]
     for test_idx in range(300):
         ndim = random.choice([2, 3])
         shape = []
@@ -338,9 +348,9 @@ def test_refcount():
     assert o.m10_refcount() == 2
     m2 = o.m10
     assert o.m10_refcount() == 3
-    del(m)
+    del m
     assert o.m10_refcount() == 2
-    del(m2)
+    del m2
     assert o.m10_refcount() == 1
 
 
@@ -456,16 +466,15 @@ def test_rect():
     o.rect_int = (50, 55, 60, 65)
     assert o.rect_int == (50, 55, 60, 65)
     with pytest.raises(ValueError):
-        o.rect_int = (1, 2) # We should give 4 values!
+        o.rect_int = (1, 2)  # We should give 4 values!
     with pytest.raises(RuntimeError):
-        o.rect_int = (1.1, 2.1, 3.1, 4.1) # We should int values!
+        o.rect_int = (1.1, 2.1, 3.1, 4.1)  # We should int values!
 
     assert o.rect_double == (5.0, 6.0, 7.0, 8.0)
     o.rect_double = (50.1, 55.2, 60.3, 65.4)
     assert o.rect_double == (50.1, 55.2, 60.3, 65.4)
     with pytest.raises(ValueError):
-        o.rect_double = (1, 2) # We should give 4 values!
-
+        o.rect_double = (1, 2)  # We should give 4 values!
 
 
 def main():
