@@ -29,6 +29,7 @@ find_package(OpenCV REQUIRED)
 # Define the main library
 #
 file(GLOB sources src/*.cpp)
+file(GLOB headers include/cvnp/*.h)
 add_library(cvnp ${sources})
 set_target_properties(cvnp PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(cvnp PUBLIC pybind11::pybind11 ${OpenCV_LIBS} Python3::Python)
@@ -37,6 +38,11 @@ target_include_directories(
     PUBLIC
     ${CMAKE_SOURCE_DIR}/include
     ${OpenCV_INCLUDE_DIRS}
+)
+set_target_properties(cvnp PROPERTIES PUBLIC_HEADER "${headers}")
+install(TARGETS cvnp
+    LIBRARY DESTINATION lib
+    PUBLIC_HEADER DESTINATION include/cvnp
 )
 
 if(CVNP_BUILD_TESTS)
