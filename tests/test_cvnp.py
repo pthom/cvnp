@@ -139,7 +139,7 @@ def test_matx_not_shared():
     # create object
     o = CvNp_TestHelper()
 
-    m_linked = o.mx_ns                   # Make a numy array that is a copy of mx_ns *without* shared memory
+    m_linked = o.mx_ns                   # Make a numpy array that is a copy of mx_ns *without* shared memory
     assert m_linked.shape == (3, 2)      # check its shape
     m_linked[1, 1] = 3                   # a value change in the numpy array made from python
     assert o.mx_ns[1, 1] != 3            # is not visible from C++!
@@ -467,9 +467,39 @@ def test_rect():
         o.rect_double = (1, 2) # We should give 4 values!
 
 
+def test_contiguous_check():
+    # Check regression with numpy 2:
+    # See https://github.com/pthom/cvnp/issues/17
+    # The contiguous check was changed to:
+    #    bool is_array_contiguous(const pybind11::array& a) { return a.flags() & pybind11::array::c_style; }
+
+    # 1. Check contiguous matrix
+    m = np.zeros((10,10),dtype=np.uint8)
+    cvnp_roundtrip(m)
+
+    # 2. Check that a non-contiguous matrix raises an error
+    full_matrix = np.ones([10, 10], np.float32)
+    sub_matrix = full_matrix[1:5, 2:4]
+    with pytest.raises(ValueError):
+        cvnp_roundtrip(sub_matrix)
+
+
+def test_matx_roundtrip():
+    # This test was failing with numpy 2 when matx_to_nparray
+    # did not transmit the stride for small matrices (Matx)
+    from cvnp import RoundTripMatx21d
+    m = np.zeros((2, 1), np.float64)
+    m[0, 0] = 42.1
+    m[1, 0] = 43.1
+    m2 = RoundTripMatx21d(m)
+    assert are_float_close(m2[0, 0], 42.1)
+    assert are_float_close(m2[1, 0], 43.1)
+
 
 def main():
     # Todo: find a way to call pytest for this file
+    test_contiguous_check()
+    test_matx_roundtrip()
     test_refcount()
     test_mat_shared()
     test_mat__shared()

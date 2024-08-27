@@ -181,15 +181,7 @@ namespace cvnp
 
     bool is_array_contiguous(const pybind11::array& a)
     {
-        pybind11::ssize_t expected_stride = a.itemsize();
-        for (int i = a.ndim() - 1; i >=0; --i)
-        {
-            pybind11::ssize_t current_stride = a.strides()[i];
-            if (current_stride != expected_stride)
-                return false;
-            expected_stride = expected_stride * a.shape()[i];
-        }
-        return true;
+        return a.flags() & pybind11::array::c_style;
     }
 
 
