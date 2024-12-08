@@ -50,7 +50,7 @@ if (PROJECT_IS_TOP_LEVEL)
     #
     file(GLOB sources cvnp/*.h cvnp/*.cpp)
     pybind11_add_module(cvnp ${sources} main/cvnp_main.cpp)
-    target_link_libraries(cvnp PUBLIC opencv_core)
+    target_link_libraries(cvnp PRIVATE opencv_core)
     target_include_directories(cvnp PUBLIC ${CMAKE_CURRENT_LIST_DIR})
     # Copy the .so or .pyd module into this dir, to facilitate the tests
     add_custom_command(
