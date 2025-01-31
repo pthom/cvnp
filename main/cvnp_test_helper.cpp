@@ -130,11 +130,20 @@ void display_eye(cv::Matx33d m = cv::Matx33d::eye())
 }
 
 
+cv::Matx21d RoundTripMatx21d(cv::Matx21d & m)
+{
+    //std::cout << "RoundTripMatx21d received "  << m(0, 0) << "    " << m(1, 0) << "\n";
+    return m;
+}
+
+
 
 void pydef_cvnp_test(pybind11::module& m)
 {
     m.def("make_eye", make_eye);
     m.def("display_eye", display_eye);
+
+    m.def("RoundTripMatx21d", RoundTripMatx21d);
 
     pybind11::class_<CvNp_TestHelper>(m, "CvNp_TestHelper")
         .def(pybind11::init<>())

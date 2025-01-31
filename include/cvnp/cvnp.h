@@ -49,6 +49,7 @@ namespace cvnp
         return pybind11::array(
             pybind11::dtype::of<_Tp>()
             , std::vector<std::size_t> {_rows, _cols}
+            , std::vector<std::size_t>{_cols * sizeof(_Tp), sizeof(_Tp)} // Strides
             , m.val
         );
     }
