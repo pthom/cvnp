@@ -76,10 +76,6 @@ if(CVNP_BUILD_TESTS)
     # Build cvnp python module
     #
     # Copy the .so or .pyd module into this dir, to facilitate the tests
-    add_custom_command(
-        TARGET cvnp POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:cvnp> ${CMAKE_CURRENT_LIST_DIR}
-    )
     file(GLOB pybind_sources main/*.cpp)
     pybind11_add_module(py_cvnp ${pybind_sources})
     target_link_libraries(py_cvnp PRIVATE cvnp)
