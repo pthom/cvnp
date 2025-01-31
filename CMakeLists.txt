@@ -47,16 +47,17 @@ install(TARGETS cvnp
 
 if(CVNP_BUILD_TESTS)
     find_program(Python_EXECUTABLE python3)
+    if(NOT Python_EXECUTABLE)
+        message(FATAL_ERROR "Could not find a python executable")
+    endif()
+
     execute_process(
         COMMAND ${Python_EXECUTABLE} -c "import numpy"
+        RESULT_VARIABLE NUMPY_NOT_FOUND
     )
-    if(NOT Python_EXECUTABLE)
-        message(FATAL_ERROR "
-        Please set the Python_EXECUTABLE variable to a python interpreter
-        where you installed numpy and opencv. For example:
 
-            cmake .. -DPython_EXECUTABLE=/venv/bin/python
-    ")
+    if(NOT ${NUMPY_NOT_FOUND} EQUAL 0)
+        message(FATAL_ERROR "numpy must be installed. Interpreter used '${Python_EXECUTABLE}'")
     endif()
 
     # Find site-packages directory (needed for tests)

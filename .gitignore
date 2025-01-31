@@ -13,3 +13,5 @@ cmake-build-*/
 .idea/
 vcpkg/
 pybind11/
+
+libcvnp.a
