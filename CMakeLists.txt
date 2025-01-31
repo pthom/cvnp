@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.26)
 project(cvnp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -46,6 +46,10 @@ install(TARGETS cvnp
 )
 
 if(CVNP_BUILD_TESTS)
+    find_program(Python_EXECUTABLE python3)
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -c "import numpy"
+    )
     if(NOT Python_EXECUTABLE)
         message(FATAL_ERROR "
         Please set the Python_EXECUTABLE variable to a python interpreter
@@ -70,10 +74,6 @@ if(CVNP_BUILD_TESTS)
     #
     # Build cvnp python module
     #
-    file(GLOB sources cvnp/*.h cvnp/*.cpp)
-    pybind11_add_module(cvnp ${sources} main/cvnp_main.cpp)
-    target_link_libraries(cvnp PRIVATE opencv_core)
-    target_include_directories(cvnp PUBLIC ${CMAKE_CURRENT_LIST_DIR})
     # Copy the .so or .pyd module into this dir, to facilitate the tests
     add_custom_command(
         TARGET cvnp POST_BUILD

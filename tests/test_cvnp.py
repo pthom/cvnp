@@ -494,7 +494,7 @@ def test_contiguous_check():
 def test_matx_roundtrip():
     # This test was failing with numpy 2 when matx_to_nparray
     # did not transmit the stride for small matrices (Matx)
-    from cvnp import RoundTripMatx21d
+    from py_cvnp import RoundTripMatx21d
     m = np.zeros((2, 1), np.float64)
     m[0, 0] = 42.1
     m[1, 0] = 43.1
