@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.27)
 project(cvnp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -46,7 +46,6 @@ install(TARGETS cvnp
 )
 
 if(CVNP_BUILD_TESTS)
-    find_program(Python_EXECUTABLE python3)
     if(NOT Python_EXECUTABLE)
         message(FATAL_ERROR "Could not find a python executable")
     endif()
