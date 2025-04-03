@@ -3,24 +3,23 @@ project(cvnp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
-if(NOT Python_EXECUTABLE)
-    message(FATAL_ERROR "
-    Please set the Python_EXECUTABLE variable to a python interpreter
-    where you installed numpy and opencv. For example:
-
-        cmake .. -DPython_EXECUTABLE=/venv/bin/python
-")
-endif()
-
-# Find site-packages directory (needed for tests)
-execute_process(
-    COMMAND ${Python_EXECUTABLE} -c "import site; print(site.getsitepackages()[0])"
-    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_DIRECTORY
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-
 if (PROJECT_IS_TOP_LEVEL)
+    if(NOT Python_EXECUTABLE)
+        message(FATAL_ERROR "
+        Please set the Python_EXECUTABLE variable to a python interpreter
+        where you installed numpy and opencv. For example:
+
+            cmake .. -DPython_EXECUTABLE=/venv/bin/python
+    ")
+    endif()
+
+    # Find site-packages directory (needed for tests)
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -c "import site; print(site.getsitepackages()[0])"
+        OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_DIRECTORY
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
     # Add address sanitizer
     option(CVNP_ENABLE_ASAN "Enable Address Sanitizer" OFF)
     if (CVNP_ENABLE_ASAN)
