@@ -3,7 +3,7 @@ project(cvnp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
-option(CVNP_BUILD_TESTS "Build tests" ON)
+option(CVNP_BUILD_TESTS "Build tests" OFF)
 option(CVNP_ENABLE_ASAN "Enable Address Sanitizer" OFF)
 
 #
