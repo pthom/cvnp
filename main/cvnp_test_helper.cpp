@@ -1,4 +1,4 @@
-#include "cvnp.h"
+#include "cvnp/cvnp.h"
 
 #include <pybind11/pybind11.h>
 #include <opencv2/core.hpp>
