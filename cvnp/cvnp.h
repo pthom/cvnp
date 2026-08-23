@@ -4,6 +4,7 @@
 #include <opencv2/core/core.hpp>
 #include <pybind11/numpy.h>
 
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -61,9 +62,18 @@ namespace cvnp
         if (a.size() != mat_size)
             throw std::runtime_error("Bad size");
 
-        _Tp* arrayValues = (_Tp*) a.data(0);
-        for (size_t i = 0; i < mat_size; ++i)
-            out_matrix.val[i] = arrayValues[i];
+        using ExpectedArray = pybind11::array_t<_Tp, pybind11::array::c_style>;
+        const auto dtype = a.dtype();
+        const auto byte_order = dtype.byteorder();
+        if (!ExpectedArray::check_(a) || dtype.itemsize() != sizeof(_Tp)
+            || (byte_order != '=' && byte_order != '|'))
+            throw std::invalid_argument("Incompatible numpy array dtype or layout");
+
+        for (pybind11::ssize_t axis = 0; axis < a.ndim(); ++axis)
+            if (a.strides(axis) <= 0)
+                throw std::invalid_argument("Incompatible numpy array stride");
+
+        std::memcpy(out_matrix.val, a.data(), mat_size * sizeof(_Tp));
     }
 } // namespace cvnp
 
