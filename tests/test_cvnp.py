@@ -496,6 +496,93 @@ def test_matx_roundtrip():
     assert are_float_close(m2[1, 0], 43.1)
 
 
+@pytest.mark.parametrize("dtype", [np.uint8, np.int64])
+def test_matx_rejects_incompatible_dtype(dtype):
+    from cvnp import RoundTripMatx21d
+
+    backing = np.zeros(64, dtype=np.uint8)
+    m = np.ndarray((2, 1), dtype=dtype, buffer=backing)
+    assert m.flags.c_contiguous
+
+    with pytest.raises(ValueError):
+        RoundTripMatx21d(m)
+
+
+def test_matx_rejects_non_native_endian_dtype():
+    from cvnp import RoundTripMatx21d
+
+    swapped_float64 = np.dtype(np.float64).newbyteorder("S")
+    m = np.array([[42.1], [43.1]], dtype=swapped_float64)
+    assert not m.dtype.isnative
+    assert m.flags.c_contiguous
+
+    with pytest.raises(ValueError):
+        RoundTripMatx21d(m)
+
+
+def test_matx_rejects_zero_stride_c_contiguous_layout():
+    from cvnp import RoundTripMatx21d
+
+    backing = np.array([42.1, 43.1], dtype=np.float64)
+    m = np.broadcast_to(backing, (1, 2))
+    assert m.size == 2
+    assert m.dtype == np.float64
+    assert m.flags.c_contiguous
+    assert 0 in m.strides
+
+    with pytest.raises(ValueError):
+        RoundTripMatx21d(m)
+
+
+@pytest.mark.parametrize("layout", ["negative_stride", "transposed", "zero_stride"])
+def test_matx_rejects_non_c_contiguous_layout(layout):
+    o = CvNp_TestHelper()
+    backing = np.arange(32, dtype=np.float64)
+
+    if layout == "negative_stride":
+        m = backing[10:4:-1].reshape(3, 2)
+    elif layout == "transposed":
+        m = backing[:6].reshape(2, 3).T
+    else:
+        m = np.broadcast_to(backing[:1], (3, 2))
+
+    assert m.size == 6
+    assert not m.flags.c_contiguous
+    with pytest.raises(ValueError):
+        o.mx_ns = m
+
+
+@pytest.mark.parametrize("layout", ["negative_stride", "positive_stride", "zero_stride"])
+def test_vec_rejects_non_c_contiguous_layout(layout):
+    o = CvNp_TestHelper()
+    backing = np.arange(32, dtype=np.float32)
+
+    if layout == "negative_stride":
+        v = backing[10:7:-1]
+    elif layout == "positive_stride":
+        v = backing[2:8:2]
+    else:
+        v = np.broadcast_to(backing[:1], (3,))
+
+    assert v.size == 3
+    assert not v.flags.c_contiguous
+    with pytest.raises(ValueError):
+        o.SetM10(0, 0, v)
+
+
+def test_matx_accepts_unaligned_c_contiguous_input():
+    from cvnp import RoundTripMatx21d
+
+    backing = np.zeros(2 * np.dtype(np.float64).itemsize + 1, dtype=np.uint8)
+    m = np.ndarray((2, 1), dtype=np.float64, buffer=backing, offset=1)
+    m[:, 0] = [42.1, 43.1]
+    assert m.flags.c_contiguous
+    assert not m.flags.aligned
+
+    result = RoundTripMatx21d(m)
+    np.testing.assert_array_equal(result, [[42.1], [43.1]])
+
+
 def main():
     # Todo: find a way to call pytest for this file
     test_contiguous_check()
